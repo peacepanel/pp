@@ -1126,5 +1126,61 @@
     <!-- تضمين JavaScript -->
     <script src="app.js" defer></script>
     
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const registrationForm = document.getElementById('userRegistrationForm');
+  const saveUserBtn = document.getElementById('saveUserBtn');
+
+  if (registrationForm && saveUserBtn) {
+    registrationForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      handleUserRegistration();
+    });
+
+    saveUserBtn.addEventListener('click', function () {
+      handleUserRegistration();
+    });
+  }
+});
+
+function handleUserRegistration() {
+  const name = document.getElementById('userName')?.value.trim();
+  const phone = document.getElementById('userPhone')?.value.trim();
+  const governorate = document.getElementById('userGovernorate')?.value;
+  const address = document.getElementById('userAddress')?.value.trim();
+
+  if (!name || name.length < 2 || name.length > 40) {
+    showNotification('❌ يرجى إدخال اسم صحيح (من 2 إلى 40 حرفًا)', 'error');
+    return;
+  }
+
+  if (!/^07[0-9]{9}$/.test(phone)) {
+    showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
+    return;
+  }
+
+  if (!governorate) {
+    showNotification('❌ يرجى اختيار المحافظة', 'error');
+    return;
+  }
+
+  if (!address || address.length < 10) {
+    showNotification('❌ يرجى إدخال عنوان تفصيلي لا يقل عن 10 أحرف', 'error');
+    return;
+  }
+
+  const userData = { name, phone, governorate, address };
+  localStorage.setItem('userData', JSON.stringify(userData));
+
+  showNotification('✅ تم حفظ بياناتك بنجاح', 'success');
+  document.getElementById('userRegistrationModal')?.classList.remove('show');
+}
+
+function showNotification(message, type = 'info') {
+  alert(message);
+}
+</script>
+
 </body>
 </html>
