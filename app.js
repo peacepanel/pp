@@ -1,18 +1,18 @@
 // ========================================================================
-// SHIQ E-COMMERCE APPLICATION - UNIFIED SYSTEM v3.1
-// التطبيق الموحد للتسوق الإلكتروني - النظام المتكامل
+// SHIQ E-COMMERCE APPLICATION - CORE SYSTEM v3.0
+// التطبيق الأساسي للتسوق الإلكتروني - النظام الجوهري
 // ========================================================================
 // المطور: فريق SHIQ Development
 // التاريخ: 2025-01-27
-// الإصدار: 3.1.0 Unified Professional
-// الوصف: النظام الموحد للمنتجات والسلة والتسجيل
+// الإصدار: 3.0.0 Professional
+// الوصف: النظام الأساسي لعرض المنتجات والسلة والتنقل
 // ========================================================================
 
 // ===== 1. الإعدادات الأساسية والثوابت =====
 const CORE_CONFIG = {
     // معلومات التطبيق الأساسية
     APP_NAME: 'SHIQ - شي ان العراق',
-    APP_VERSION: '3.1.0',
+    APP_VERSION: '3.0.0',
     APP_URL: 'https://peacepanel.github.io/shein-baghdad/',
     
     // إعدادات Google Sheets API
@@ -31,7 +31,7 @@ const CORE_CONFIG = {
     STORAGE_KEYS: {
         CART_DATA: 'shiq_cart_v3',
         CATEGORY_IMAGES: 'shiq_category_images_v3',
-        USER_DATA: 'shiq_current_user_v3'
+        APP_PREFERENCES: 'shiq_preferences_v3'
     },
     
     // إعدادات الأداء
@@ -39,14 +39,7 @@ const CORE_CONFIG = {
         IMAGE_CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 ساعة
         API_TIMEOUT: 10000,                         // 10 ثواني
         RETRY_ATTEMPTS: 3                           // محاولات إعادة
-    },
-    
-    // المحافظات العراقية
-    GOVERNORATES: [
-        'بغداد', 'البصرة', 'نينوى', 'أربيل', 'النجف', 'كربلاء',
-        'بابل', 'الأنبار', 'ذي قار', 'القادسية', 'كركوك', 'واسط',
-        'صلاح الدين', 'المثنى', 'ديالى', 'ميسان', 'دهوك', 'السليمانية'
-    ]
+    }
 };
 
 // ===== 2. تكوين الفئات والمنتجات =====
@@ -143,7 +136,7 @@ const PRODUCT_CATEGORIES = {
     }
 };
 
-// ===== 3. نظام إدارة السلة =====
+// ===== 3. المتغيرات العامة =====
 class ShoppingCart {
     constructor() {
         this.items = [];
@@ -674,164 +667,171 @@ class UIManager {
     }
     
     openCart() {
-        if (this.cart.getTotalItems() === 0) {
-            this.showToast('🛒 السلة فارغة! أضف بعض المنتجات أولاً', 'warning');
-            return;
-        }
-        
-        // التحقق من تسجيل المستخدم باستخدام النظام الموحد
-        if (!window.currentUser) {
-            this.showToast('📝 يرجى تسجيل بياناتك أولاً لإكمال الطلب', 'info');
-            setTimeout(() => {
-                showUserRegistration();
-            }, 500);
-            return;
-        }
-        
-        this.createCartWindow();
+    if (this.cart.getTotalItems() === 0) {
+        this.showToast('🛒 السلة فارغة! أضف بعض المنتجات أولاً', 'warning');
+        return;
     }
     
-    createCartWindow() {
-        const subtotal = this.cart.getTotalPrice();
-        const deliveryFee = this.cart.getDeliveryFee();
-        const total = this.cart.getFinalTotal();
-        
-        let itemsHtml = '';
-        this.cart.items.forEach((item, index) => {
-            const itemTotal = item.price * item.quantity;
-            itemsHtml += `
-                <div class="cart-item" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e5e7eb; margin: 10px 0; border-radius: 15px; background: #f9fafb;">
-                    <img src="${item.imageUrl}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-left: 15px;">
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 5px 0; color: #1f2937;">${item.name}</h4>
-                        <p style="margin: 0; color: #ef4444; font-weight: bold;">${item.price.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY} × ${item.quantity}</p>
-                        <p style="margin: 5px 0 0 0; color: #059669; font-weight: bold;">المجموع: ${itemTotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</p>
-                        ${item.size ? `<p style="margin: 2px 0; color: #6b7280;">المقاس: ${item.size}</p>` : ''}
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <button onclick="window.opener.cart.updateQuantity('${item.id}', ${item.quantity - 1}); window.close(); window.opener.ui.openCart();" 
-                                    style="width: 30px; height: 30px; border: none; background: #ef4444; color: white; border-radius: 50%; cursor: pointer;">-</button>
-                            <span style="font-weight: bold; min-width: 20px; text-align: center;">${item.quantity}</span>
-                            <button onclick="window.opener.cart.updateQuantity('${item.id}', ${item.quantity + 1}); window.close(); window.opener.ui.openCart();" 
-                                    style="width: 30px; height: 30px; border: none; background: #10b981; color: white; border-radius: 50%; cursor: pointer;">+</button>
-                        </div>
-                        <button onclick="window.opener.cart.removeItem('${item.id}'); window.close(); window.opener.ui.openCart();" 
-                                style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 10px; cursor: pointer;">🗑️ حذف</button>
-                    </div>
+    // التحقق من تسجيل المستخدم باستخدام النظام المُبسط
+    if (!window.currentUser) {
+        this.showToast('📝 يرجى تسجيل بياناتك أولاً لإكمال الطلب', 'info');
+        setTimeout(() => {
+            if (window.showUserRegistration) {
+                window.showUserRegistration();
+            }
+        }, 500);
+        return;
+    }
+    
+    this.createCartWindow();
+}
+
+    
+    // ===== إضافة فحص تسجيل المستخدم =====
+    // التحقق من وجود بيانات المستخدم قبل فتح السلة
+    if (userManager && !userManager.currentUser) {
+        this.showToast('📝 يرجى تسجيل بياناتك أولاً لإكمال الطلب', 'info');
+        setTimeout(() => {
+            userManager.showRegistrationForm();
+        }, 500);
+        return;
+    }
+    
+    this.createCartWindow();
+}
+    
+createCartWindow() {
+    const subtotal = this.cart.getTotalPrice();
+    const deliveryFee = this.cart.getDeliveryFee();
+    const total = this.cart.getFinalTotal();
+    
+    let itemsHtml = '';
+    this.cart.items.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        itemsHtml += `
+            <div class="cart-item" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e5e7eb; margin: 10px 0; border-radius: 15px; background: #f9fafb;">
+                <img src="${item.imageUrl}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-left: 15px;">
+                <div style="flex: 1;">
+                    <h4 style="margin: 0 0 5px 0; color: #1f2937;">${item.name}</h4>
+                    <p style="margin: 0; color: #ef4444; font-weight: bold;">${item.price.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY} × ${item.quantity}</p>
+                    <p style="margin: 5px 0 0 0; color: #059669; font-weight: bold;">المجموع: ${itemTotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</p>
+                    ${item.size ? `<p style="margin: 2px 0; color: #6b7280;">المقاس: ${item.size}</p>` : ''}
                 </div>
-            `;
-        });
+                <div style="text-align: center;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <button onclick="window.opener.cart.updateQuantity('${item.id}', ${item.quantity - 1}); window.close(); window.opener.ui.openCart();" 
+                style="width: 30px; height: 30px; border: none; background: #ef4444; color: white; border-radius: 50%; cursor: pointer;">-</button>
+        <span style="font-weight: bold; min-width: 20px; text-align: center;">${item.quantity}</span>
+        <button onclick="window.opener.cart.updateQuantity('${item.id}', ${item.quantity + 1}); window.close(); window.opener.ui.openCart();" 
+                style="width: 30px; height: 30px; border: none; background: #10b981; color: white; border-radius: 50%; cursor: pointer;">+</button>
+    </div>
+    <button onclick="window.opener.cart.removeItem('${item.id}'); window.close(); window.opener.ui.openCart();" 
+            style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 10px; cursor: pointer;">🗑️ حذف</button>
+</div>
+            </div>
+        `;
+    });
+    
+    const cartWindow = window.open('', '_blank', 'width=800,height=700,scrollbars=yes');
+    cartWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🛒 مراجعة السلة - ${CORE_CONFIG.APP_NAME}</title>
+            <style>
+                body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); direction: rtl; margin: 0; min-height: 100vh; }
+                .container { background: white; border-radius: 20px; padding: 25px; max-width: 900px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+                h1 { text-align: center; color: #1f2937; margin-bottom: 30px; font-size: 2rem; }
+                .summary { background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); padding: 20px; border-radius: 15px; margin: 20px 0; border: 2px solid #8B5CF6; }
+                .summary-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1rem; }
+                .total-row { font-weight: bold; font-size: 1.3rem; color: #1f2937; border-top: 2px solid #8B5CF6; padding-top: 10px; margin-top: 15px; }
+                .btn-primary { display: block; width: 100%; text-align: center; padding: 20px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; text-decoration: none; border-radius: 50px; margin: 25px 0; font-size: 1.2rem; font-weight: 700; border: none; cursor: pointer; }
+                .btn-secondary { background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin: 0 5px; }
+                .delivery-note { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 10px; margin: 10px 0; text-align: center; }
+                .free-delivery-note { background: #d1fae5; border: 2px solid #10b981; color: #047857; padding: 10px; border-radius: 10px; margin: 10px 0; text-align: center; }
+            </style>
+        </head>
         
-        const cartWindow = window.open('', '_blank', 'width=800,height=700,scrollbars=yes');
-        cartWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>🛒 مراجعة السلة - ${CORE_CONFIG.APP_NAME}</title>
-                <style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); direction: rtl; margin: 0; min-height: 100vh; }
-                    .container { background: white; border-radius: 20px; padding: 25px; max-width: 900px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
-                    h1 { text-align: center; color: #1f2937; margin-bottom: 30px; font-size: 2rem; }
-                    .summary { background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); padding: 20px; border-radius: 15px; margin: 20px 0; border: 2px solid #8B5CF6; }
-                    .summary-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1rem; }
-                    .total-row { font-weight: bold; font-size: 1.3rem; color: #1f2937; border-top: 2px solid #8B5CF6; padding-top: 10px; margin-top: 15px; }
-                    .btn-primary { display: block; width: 100%; text-align: center; padding: 20px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; text-decoration: none; border-radius: 50px; margin: 25px 0; font-size: 1.2rem; font-weight: 700; border: none; cursor: pointer; }
-                    .btn-secondary { background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin: 0 5px; }
-                    .delivery-note { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; padding: 10px; border-radius: 10px; margin: 10px 0; text-align: center; }
-                    .free-delivery-note { background: #d1fae5; border: 2px solid #10b981; color: #047857; padding: 10px; border-radius: 10px; margin: 10px 0; text-align: center; }
-                </style>
-            </head>
-            
-            <body>
-                <div class="container">
-                    <h1>🛒 مراجعة السلة - ${CORE_CONFIG.APP_NAME}</h1>
-                    
-                    <div style="margin: 20px 0;">
-                        <h3>📦 المنتجات المطلوبة (${this.cart.items.length} منتج)</h3>
-                        ${itemsHtml}
+        <body>
+            <div class="container">
+                <h1>🛒 مراجعة السلة - ${CORE_CONFIG.APP_NAME}</h1>
+                
+                <div style="margin: 20px 0;">
+                    <h3>📦 المنتجات المطلوبة (${this.cart.items.length} منتج)</h3>
+                    ${itemsHtml}
+                </div>
+                
+                <div class="summary">
+                    <h3 style="color: #8B5CF6; margin-bottom: 15px;">📊 ملخص الطلب</h3>
+                    <div class="summary-row">
+                        <span>المجموع الفرعي:</span>
+                        <span>${subtotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
                     </div>
-                    
-                    <div class="summary">
-                        <h3 style="color: #8B5CF6; margin-bottom: 15px;">📊 ملخص الطلب</h3>
-                        <div class="summary-row">
-                            <span>المجموع الفرعي:</span>
-                            <span>${subtotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>رسوم التوصيل:</span>
-                            <span>${deliveryFee === 0 ? 'مجاني 🎉' : deliveryFee.toLocaleString() + ' ' + CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
-                        </div>
-                        ${deliveryFee === 0 
-                            ? '<div class="free-delivery-note">🎉 تم تفعيل التوصيل المجاني!</div>' 
-                            : `<div class="delivery-note">💡 أضف ${(CORE_CONFIG.ECOMMERCE.FREE_DELIVERY_THRESHOLD - subtotal).toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY} للحصول على توصيل مجاني!</div>`
-                        }
-                        <div class="summary-row total-row">
-                            <span>المجموع الكلي:</span>
-                            <span>${total.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
-                        </div>
+                    <div class="summary-row">
+                        <span>رسوم التوصيل:</span>
+                        <span>${deliveryFee === 0 ? 'مجاني 🎉' : deliveryFee.toLocaleString() + ' ' + CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
                     </div>
-                    
-                    <button class="btn-primary" onclick="sendToWhatsApp()">
-                        📱 إرسال الطلب عبر واتساب
-                    </button>
-                    
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn-secondary" onclick="window.opener.cart.clear(); window.close();">🧹 تفريغ السلة</button>
-                        <button class="btn-secondary" onclick="window.close();">❌ إغلاق</button>
+                    ${deliveryFee === 0 
+                        ? '<div class="free-delivery-note">🎉 تم تفعيل التوصيل المجاني!</div>' 
+                        : `<div class="delivery-note">💡 أضف ${(CORE_CONFIG.ECOMMERCE.FREE_DELIVERY_THRESHOLD - subtotal).toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY} للحصول على توصيل مجاني!</div>`
+                    }
+                    <div class="summary-row total-row">
+                        <span>المجموع الكلي:</span>
+                        <span>${total.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}</span>
                     </div>
                 </div>
                 
-                <script>
-                    function sendToWhatsApp() {
-                        const message = createWhatsAppMessage();
-                        const whatsappUrl = 'https://api.whatsapp.com/send?phone=${CORE_CONFIG.ECOMMERCE.WHATSAPP_NUMBER}&text=' + encodeURIComponent(message);
-                        window.open(whatsappUrl, '_blank');
-                        window.close();
-                    }
+                <button class="btn-primary" onclick="sendToWhatsApp()">
+                    📱 إرسال الطلب عبر واتساب
+                </button>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn-secondary" onclick="window.opener.cart.clear(); window.close();">🧹 تفريغ السلة</button>
+                    <button class="btn-secondary" onclick="window.close();">❌ إغلاق</button>
+                </div>
+            </div>
+            
+            <script>
+                
+                
+                function sendToWhatsApp() {
+                    const message = createWhatsAppMessage();
+                    const whatsappUrl = 'https://api.whatsapp.com/send?phone=${CORE_CONFIG.ECOMMERCE.WHATSAPP_NUMBER}&text=' + encodeURIComponent(message);
+                    window.open(whatsappUrl, '_blank');
+                    window.close();
+                }
+                
+                function createWhatsAppMessage() {
+                    let message = '🛍️ طلب جديد من ${CORE_CONFIG.APP_NAME}\\n\\n';
+                    message += '📦 المنتجات المطلوبة:\\n';
                     
-                    function createWhatsAppMessage() {
-                        let message = '🛍️ طلب جديد من ${CORE_CONFIG.APP_NAME}\\n\\n';
-                        
-                        // معلومات العميل من النظام الموحد
-                        const customer = window.opener.currentUser;
-                        if (customer) {
-                            message += '👤 معلومات العميل:\\n';
-                            message += '📛 الاسم: ' + customer.name + '\\n';
-                            message += '📞 الهاتف: ' + customer.phone + '\\n';
-                            message += '🏠 المحافظة: ' + customer.governorate + '\\n';
-                            message += '📍 العنوان: ' + customer.address + '\\n\\n';
-                        }
-                        
-                        message += '📦 المنتجات المطلوبة:\\n';
-                        
-                        const items = ${JSON.stringify(this.cart.items)};
-                        items.forEach((item, index) => {
-                            message += '\\n' + (index + 1) + '. ' + item.name;
-                            message += '\\n   💰 السعر: ' + item.price.toLocaleString() + ' ${CORE_CONFIG.ECOMMERCE.CURRENCY}';
-                            message += '\\n   📦 الكمية: ' + item.quantity;
-                            if (item.size) message += '\\n   📏 المقاس: ' + item.size;
-                            message += '\\n   🖼️ رابط الصورة: ' + item.imageUrl;
-                            message += '\\n   💵 المجموع الفرعي: ' + (item.price * item.quantity).toLocaleString() + ' ${CORE_CONFIG.ECOMMERCE.CURRENCY}';
-                            message += '\\n';
-                        });
-                        
-                        message += '\\n📊 ملخص الطلب:\\n';
-                        message += '💰 المجموع الفرعي: ${subtotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}\\n';
-                        message += '🚚 رسوم التوصيل: ${deliveryFee === 0 ? 'مجاني 🎉' : deliveryFee.toLocaleString() + ' ' + CORE_CONFIG.ECOMMERCE.CURRENCY}\\n';
-                        message += '💵 المجموع الكلي: ${total.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}\\n\\n';
-                        message += '📞 للتواصل: ${CORE_CONFIG.ECOMMERCE.PHONE_NUMBER}\\n';
-                        message += '🌐 الموقع: ${CORE_CONFIG.APP_URL}';
-                        
-                        return message;
-                    }
-                </script>
-            </body>
-            </html>
-        `);
-    }
+                    const items = ${JSON.stringify(this.cart.items)};
+                    items.forEach((item, index) => {
+    message += '\\n' + (index + 1) + '. ' + item.name;
+    message += '\\n   💰 السعر: ' + item.price.toLocaleString() + ' ${CORE_CONFIG.ECOMMERCE.CURRENCY}';
+    message += '\\n   📦 الكمية: ' + item.quantity;
+    if (item.size) message += '\\n   📏 المقاس: ' + item.size;
+    message += '\\n   🖼️ رابط الصورة: ' + item.imageUrl;
+    message += '\\n   💵 المجموع الفرعي: ' + (item.price * item.quantity).toLocaleString() + ' ${CORE_CONFIG.ECOMMERCE.CURRENCY}';
+    message += '\\n';
+});
+                    
+                    message += '\\n📊 ملخص الطلب:\\n';
+                    message += '💰 المجموع الفرعي: ${subtotal.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}\\n';
+                    message += '🚚 رسوم التوصيل: ${deliveryFee === 0 ? 'مجاني 🎉' : deliveryFee.toLocaleString() + ' ' + CORE_CONFIG.ECOMMERCE.CURRENCY}\\n';
+                    message += '💵 المجموع الكلي: ${total.toLocaleString()} ${CORE_CONFIG.ECOMMERCE.CURRENCY}\\n\\n';
+                    message += '📞 للتواصل: ${CORE_CONFIG.ECOMMERCE.PHONE_NUMBER}\\n';
+                    message += '🌐 الموقع: ${CORE_CONFIG.APP_URL}';
+                    
+                    return message;
+                }
+            </script>
+        </body>
+        </html>
+    `);
+}
     
     enlargeImage(src) {
         if (!this.overlay || !src) return;
@@ -963,261 +963,7 @@ class EventManager {
     }
 }
 
-// ===== 7. نظام التسجيل الموحد المُبسط =====
-
-// متغيرات النظام الموحد
-let currentUser = null;
-let notificationsRequested = false;
-
-// تحميل بيانات المستخدم المحفوظة
-function loadCurrentUser() {
-    try {
-        const userData = localStorage.getItem(CORE_CONFIG.STORAGE_KEYS.USER_DATA);
-        if (userData) {
-            currentUser = JSON.parse(userData);
-            updateUserInterface(currentUser);
-            
-            const firstName = currentUser.name.split(' ')[0];
-            setTimeout(() => {
-                ui.showToast(`أهلاً بعودتك ${firstName} من ${currentUser.governorate} 👋`, 'success');
-            }, 2000);
-            
-            console.log('👤 تم تحميل المستخدم:', currentUser.name);
-        }
-    } catch (error) {
-        console.error('خطأ في تحميل المستخدم:', error);
-        currentUser = null;
-    }
-}
-
-// تحديث واجهة المستخدم
-function updateUserInterface(user) {
-    // تحديث رسالة الترحيب
-    const welcomeDiv = document.getElementById('userWelcome');
-    if (welcomeDiv && user) {
-        const firstName = user.name.split(' ')[0];
-        welcomeDiv.innerHTML = `مرحباً ${firstName} من ${user.governorate} 👋`;
-        welcomeDiv.style.display = 'block';
-    }
-    
-    // إظهار زر الملف الشخصي
-    const profileBtn = document.getElementById('userProfileBtn');
-    if (profileBtn) {
-        profileBtn.style.display = 'flex';
-    }
-}
-
-// إعداد نظام التسجيل
-function setupUserRegistrationSystem() {
-    const form = document.getElementById('userRegistrationForm');
-    
-    if (form && !form.hasAttribute('data-unified-handler')) {
-        form.setAttribute('data-unified-handler', 'true');
-        form.addEventListener('submit', handleUserRegistration);
-        console.log('✅ تم إعداد نظام التسجيل الموحد');
-    }
-}
-
-// معالجة نموذج التسجيل
-async function handleUserRegistration(event) {
-    event.preventDefault();
-    
-    console.log('🎯 بدء التسجيل الموحد...');
-    
-    // جمع البيانات من النموذج
-    const formData = new FormData(event.target);
-    const interests = Array.from(event.target.querySelectorAll('input[name="userInterests"]:checked'))
-        .map(cb => cb.value);
-    
-    const userData = {
-        name: formData.get('userName'),
-        phone: formData.get('userPhone'),
-        governorate: formData.get('userGovernorate'),
-        address: formData.get('userAddress'),
-        gender: formData.get('userGender') || '',
-        interests: interests,
-        notificationsEnabled: notificationsRequested
-    };
-    
-    console.log('📊 البيانات المُجمعة:', userData);
-    
-    // التحقق من البيانات
-    if (!validateUserData(userData)) {
-        return;
-    }
-    
-    console.log('✅ البيانات صحيحة، جاري الحفظ...');
-    
-    // حفظ البيانات
-    const result = saveUserData(userData);
-    
-    if (result.success) {
-        closeUserRegistrationModal();
-        ui.showToast('🎉 مرحباً بك! تم تسجيلك بنجاح', 'success');
-        updateUserInterface(result.user);
-        
-        // إرسال إشعار ترحيب
-        if (userData.notificationsEnabled) {
-            setTimeout(() => {
-                sendWelcomeNotification(result.user);
-            }, 2000);
-        }
-    } else {
-        ui.showToast('❌ ' + result.error, 'error');
-    }
-}
-
-// التحقق من صحة البيانات
-function validateUserData(userData) {
-    const name = (userData.name || '').trim();
-    
-    // التحقق من الاسم
-    if (!name || name.length === 0) {
-        ui.showToast('❌ يرجى إدخال الاسم', 'error');
-        return false;
-    }
-    
-    if (name.length < 2) {
-        ui.showToast('❌ الاسم قصير جداً (حرفين على الأقل)', 'error');
-        return false;
-    }
-    
-    if (name.length > 40) {
-        ui.showToast('❌ الاسم طويل جداً (40 حرف كحد أقصى)', 'error');
-        return false;
-    }
-    
-    // التحقق من الأحرف الصالحة (عربية/إنجليزية/مسافات/واصلات/نقاط)
-    const nameRegex = /^[\u0600-\u06FF\u0750-\u077Fa-zA-Z\s\-\.]+$/;
-    if (!nameRegex.test(name)) {
-        ui.showToast('❌ الاسم يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', 'error');
-        return false;
-    }
-    
-    // التحقق من رقم الهاتف العراقي
-    const phone = (userData.phone || '').trim();
-    if (!phone || !/^07[0-9]{9}$/.test(phone)) {
-        ui.showToast('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
-        return false;
-    }
-    
-    // التحقق من المحافظة
-    if (!userData.governorate || userData.governorate.trim() === '') {
-        ui.showToast('❌ يرجى اختيار المحافظة', 'error');
-        return false;
-    }
-    
-    // التحقق من العنوان
-    const address = (userData.address || '').trim();
-    if (!address || address.length < 10) {
-        ui.showToast('❌ يرجى إدخال عنوان تفصيلي (10 أحرف على الأقل)', 'error');
-        return false;
-    }
-    
-    if (address.length > 200) {
-        ui.showToast('❌ العنوان طويل جداً (200 حرف كحد أقصى)', 'error');
-        return false;
-    }
-    
-    console.log('✅ تم التحقق من البيانات بنجاح');
-    return true;
-}
-
-// حفظ بيانات المستخدم
-function saveUserData(userData) {
-    try {
-        const user = {
-            id: generateUserId(),
-            name: userData.name.trim(),
-            phone: userData.phone.trim(),
-            governorate: userData.governorate,
-            address: userData.address.trim(),
-            gender: userData.gender,
-            interests: userData.interests,
-            notificationsEnabled: userData.notificationsEnabled,
-            registrationDate: new Date().toISOString(),
-            lastActive: new Date().toISOString(),
-            version: CORE_CONFIG.APP_VERSION
-        };
-        
-        // حفظ محلياً
-        localStorage.setItem(CORE_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-        currentUser = user;
-        
-        console.log('💾 تم حفظ المستخدم:', user);
-        
-        return { success: true, user: user };
-        
-    } catch (error) {
-        console.error('خطأ في الحفظ:', error);
-        return { success: false, error: 'فشل في حفظ البيانات' };
-    }
-}
-
-// توليد معرف مستخدم فريد
-function generateUserId() {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 9);
-    return `SHIQ_USER_${timestamp}_${random}`;
-}
-
-// إدارة الإشعارات
-function enableNotifications() {
-    notificationsRequested = true;
-    
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                ui.showToast('✅ تم تفعيل الإشعارات بنجاح', 'success');
-            } else {
-                ui.showToast('⚠️ لم يتم تفعيل الإشعارات', 'warning');
-            }
-        });
-    } else {
-        ui.showToast('⚠️ المتصفح لا يدعم الإشعارات', 'warning');
-    }
-}
-
-function skipNotifications() {
-    notificationsRequested = false;
-    ui.showToast('ℹ️ يمكنك تفعيل الإشعارات لاحقاً', 'info');
-}
-
-// إرسال إشعار ترحيب
-function sendWelcomeNotification(user) {
-    if (Notification.permission === 'granted') {
-        const firstName = user.name.split(' ')[0];
-        
-        const notification = new Notification(`🎉 مرحباً ${firstName}!`, {
-            body: `أهلاً بك في شي ان العراق من ${user.governorate}`,
-            icon: './icons/icon-192x192.png'
-        });
-        
-        setTimeout(() => notification.close(), 5000);
-    }
-}
-
-// إدارة النوافذ المنبثقة
-function showUserRegistration() {
-    if (currentUser) {
-        ui.showToast('أنت مسجل بالفعل!', 'info');
-        return;
-    }
-    
-    const modal = document.getElementById('userRegistrationModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function closeUserRegistrationModal() {
-    const modal = document.getElementById('userRegistrationModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// ===== 8. تهيئة التطبيق =====
+// ===== 7. تهيئة التطبيق =====
 let cart, imageManager, ui, eventManager;
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -1229,12 +975,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         imageManager = new ImageManager();
         ui = new UIManager(cart, imageManager);
         eventManager = new EventManager();
-        
-        // تهيئة نظام التسجيل الموحد
-        setTimeout(() => {
-            setupUserRegistrationSystem();
-            loadCurrentUser();
-        }, 1000);
         
         // عرض الواجهة
         ui.createCategoryNavigation();
@@ -1250,10 +990,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         // إضافة دوال للنافذة العامة للوصول إليها من HTML
         window.ui = ui;
         window.cart = cart;
-        window.currentUser = currentUser;
-        window.showUserRegistration = showUserRegistration;
-        window.enableNotifications = enableNotifications;
-        window.skipNotifications = skipNotifications;
         
     } catch (error) {
         console.error('❌ خطأ في تهيئة التطبيق:', error);
@@ -1267,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// ===== 9. دوال مساعدة للاستخدام العام =====
+// ===== دوال مساعدة للاستخدام العام =====
 function openCart() {
     ui.openCart();
 }
@@ -1288,15 +1024,7 @@ function searchProduct() {
     ui.searchProducts();
 }
 
-function openUserProfile() {
-    if (!currentUser) {
-        showUserRegistration();
-        return;
-    }
-    ui.showToast('🎉 الملف الشخصي قيد التطوير!', 'info');
-}
-
-// ===== 10. CSS Animations =====
+// ===== CSS Animations =====
 if (!document.querySelector('#core-animations')) {
     const style = document.createElement('style');
     style.id = 'core-animations';
@@ -1328,6 +1056,1735 @@ if (!document.querySelector('#core-animations')) {
     document.head.appendChild(style);
 }
 
-console.log('📦 تم تحميل النظام الموحد بنجاح - Unified System Ready!');
+console.log('📦 تم تحميل النظام الأساسي بنجاح - Core Application Ready!');
 
-// ===== نهاية الملف =====
+
+
+
+// ========================================================================
+// ========================================================================
+// ========================================================================
+// ========================================================================
+// ========================================================================
+//
+//    SHIQ E-COMMERCE APPLICATION - ADVANCED FEATURES SYSTEM v3.0
+//    التطبيق المتقدم للتسوق الإلكتروني - نظام الميزات المتقدمة
+//
+// ========================================================================
+// ========================================================================
+// ========================================================================
+// ========================================================================
+// ========================================================================
+//
+// المطور: فريق SHIQ Development Team
+// التاريخ: 2025-01-27
+// الإصدار: 3.0.0 Professional Advanced
+// الوصف: النظام المتقدم للإشعارات وإدارة المستخدمين والإحصائيات
+//
+// ========================================================================
+// ملاحظة مهمة: هذا الجزء منفصل تماماً عن النظام الأساسي ويمكن استخدامه
+// في أي تطبيق آخر عبر استيراد هذا الملف أو نسخ الأكواد المطلوبة
+// ========================================================================
+
+// ===== 1. إعدادات النظام المتقدم =====
+const ADVANCED_CONFIG = {
+    // إعدادات Google Apps Script
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzc9ojokNkOcmtINeXR9ijzc5HCfq5Ljgcp_4WIpW5JLGSnJryRvnyZqH8EEwB7tbHk/exec',
+    MAIN_SHEET_ID: '1ap6gkoczUsqvf0KMoxXroo2uP_wycDGxyg6r-UPFgBQ',
+    
+    // أوراق العمل المتقدمة
+    SHEETS: {
+        USERS: 'Users',
+        ORDERS: 'Orders',
+        ANALYTICS: 'Analytics',
+        SUBSCRIPTIONS: 'Subscriptions',
+        NOTIFICATIONS: 'Notifications'
+    },
+    
+    // إعدادات الإشعارات
+    NOTIFICATIONS: {
+        ENABLED: true,
+        DEFAULT_ICON: './icons/icon-192x192.png',
+        PERMISSION_TIMEOUT: 5000,
+        RETRY_ATTEMPTS: 3,
+        BATCH_SIZE: 100,
+        RATE_LIMIT: 1000 // مللي ثانية بين الإرسالات
+    },
+    
+    // إعدادات Firebase (اختيارية)
+    FIREBASE: {
+        ENABLED: false,
+        SERVER_KEY: '',
+        FCM_ENDPOINT: 'https://fcm.googleapis.com/fcm/send'
+    },
+    
+    // إعدادات التخزين المتقدم
+    STORAGE_KEYS: {
+        USER_DATA: 'shiq_user_data_v3',
+        DEVICE_ID: 'shiq_device_id_v3',
+        NOTIFICATIONS_STATUS: 'shiq_notifications_status_v3',
+        ANALYTICS_DATA: 'shiq_analytics_v3',
+        PREFERENCES: 'shiq_advanced_preferences_v3'
+    },
+    
+    // المحافظات العراقية
+    GOVERNORATES: [
+        'بغداد', 'البصرة', 'نينوى', 'أربيل', 'النجف', 'كربلاء',
+        'بابل', 'الأنبار', 'ذي قار', 'القادسية', 'كركوك', 'واسط',
+        'صلاح الدين', 'المثنى', 'ديالى', 'ميسان', 'دهوك', 'السليمانية'
+    ],
+    
+    // فئات الاهتمامات
+    INTERESTS: [
+        'اكسسوارات نسائية', 'احذية وحقائب', 'ملابس نسائية', 'ملابس اطفال',
+        'مستلزمات منزلية', 'مستلزمات موبايل', 'مكياج وعناية', 'مفروشات'
+    ]
+};
+
+// ===== 2. نظام إدارة المستخدمين المتقدم =====
+class UserManager {
+    constructor() {
+        this.currentUser = null;
+        this.deviceId = null;
+        this.initialize();
+    }
+    
+    async initialize() {
+        this.deviceId = this.getOrCreateDeviceId();
+        this.currentUser = this.loadUserData();
+        
+        if (this.currentUser) {
+            this.updateLastActivity();
+            this.showWelcomeBack();
+        }
+        
+        console.log('👤 نظام إدارة المستخدمين جاهز');
+    }
+
+
+    
+    getOrCreateDeviceId() {
+        let deviceId = localStorage.getItem(ADVANCED_CONFIG.STORAGE_KEYS.DEVICE_ID);
+        
+        if (!deviceId) {
+            deviceId = this.generateDeviceId();
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.DEVICE_ID, deviceId);
+            this.registerDevice(deviceId);
+        }
+        
+        return deviceId;
+    }
+    
+    generateDeviceId() {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 9);
+        const fingerprint = this.createFingerprint();
+        return `SHIQ_DEVICE_${timestamp}_${fingerprint}_${random}`;
+    }
+    
+    createFingerprint() {
+        const data = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width,
+            screen.height,
+            new Date().getTimezoneOffset()
+        ].join('|');
+        
+        return btoa(data).slice(0, 8);
+    }
+    
+    async registerDevice(deviceId) {
+        try {
+            const deviceData = {
+                deviceId: deviceId,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screenResolution: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                installDate: new Date().toISOString(),
+                appVersion: CORE_CONFIG?.APP_VERSION || '3.0.0'
+            };
+            
+            await this.sendToBackend('register_device', { deviceData });
+            console.log('📱 تم تسجيل الجهاز:', deviceId);
+        } catch (error) {
+            console.warn('تعذر تسجيل الجهاز:', error);
+        }
+    }
+    
+    loadUserData() {
+        try {
+            const userData = localStorage.getItem(ADVANCED_CONFIG.STORAGE_KEYS.USER_DATA);
+            if (userData) {
+                const user = JSON.parse(userData);
+                return this.validateUserData(user) ? user : null;
+            }
+        } catch (error) {
+            console.error('خطأ في تحميل بيانات المستخدم:', error);
+        }
+        return null;
+    }
+    
+    validateUserData(user) {
+        const required = ['id', 'name', 'phone', 'governorate'];
+        return required.every(field => user[field]);
+    }
+    
+    async saveUserData(userData) {
+        try {
+            // تحضير البيانات
+            const user = {
+                id: userData.id || this.generateUserId(),
+                name: userData.name.trim(),
+                phone: userData.phone.trim(),
+                governorate: userData.governorate,
+                address: userData.address?.trim() || '',
+                gender: userData.gender || '',
+                interests: Array.isArray(userData.interests) ? userData.interests : [],
+                notificationsEnabled: userData.notificationsEnabled || false,
+                registrationDate: userData.registrationDate || new Date().toISOString(),
+                lastActive: new Date().toISOString(),
+                version: CORE_CONFIG?.APP_VERSION || '3.0.0',
+                deviceId: this.deviceId
+            };
+            
+            // التحقق من صحة البيانات
+            if (!this.validateUserData(user)) {
+                throw new Error('بيانات المستخدم غير مكتملة');
+            }
+            
+            // حفظ محلياً
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+            this.currentUser = user;
+            
+            // إرسال للخادم
+            const result = await this.sendToBackend('save_user', { userData: user });
+            
+            if (result.success) {
+                console.log('✅ تم حفظ بيانات المستخدم');
+                
+                // تسجيل في الإشعارات إذا كانت مفعلة
+                if (user.notificationsEnabled) {
+                    await notificationManager.subscribeUser(user);
+                }
+                
+                // تتبع التسجيل
+                analyticsManager.trackUserRegistration(user);
+                
+                return { success: true, user: user };
+            } else {
+                throw new Error(result.error || 'فشل في حفظ البيانات');
+            }
+            
+        } catch (error) {
+            console.error('خطأ في حفظ بيانات المستخدم:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    generateUserId() {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 9);
+        return `SHIQ_USER_${timestamp}_${random}`;
+    }
+    
+    updateLastActivity() {
+        if (this.currentUser) {
+            this.currentUser.lastActive = new Date().toISOString();
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(this.currentUser));
+        }
+    }
+    
+    showWelcomeBack() {
+        if (this.currentUser) {
+            const firstName = this.currentUser.name.split(' ')[0];
+            const welcomeMessage = `أهلاً بعودتك ${firstName} من ${this.currentUser.governorate} 👋`;
+            
+            setTimeout(() => {
+                this.showNotification(welcomeMessage, 'success');
+            }, 1000);
+            
+            this.updateWelcomeUI();
+        }
+    }
+    
+    updateWelcomeUI() {
+        const welcomeDiv = document.getElementById('userWelcome');
+        const profileBtn = document.getElementById('userProfileBtn');
+        
+        if (this.currentUser && welcomeDiv) {
+            const firstName = this.currentUser.name.split(' ')[0];
+            welcomeDiv.innerHTML = `مرحباً ${firstName} من ${this.currentUser.governorate} 👋`;
+            welcomeDiv.style.display = 'block';
+        }
+        
+        if (profileBtn) {
+            profileBtn.classList.add('show');
+        }
+    }
+    
+    showRegistrationForm() {
+        const modal = this.createRegistrationModal();
+        document.body.appendChild(modal);
+        modal.classList.add('show');
+    }
+    
+    createRegistrationModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'advanced-user-registration';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🙋‍♀️ مرحباً بك في شي ان العراق</h2>
+                    <p>نحتاج بعض المعلومات لتحسين تجربة التسوق</p>
+                </div>
+                
+                <form id="advanced-registration-form">
+                    <div class="form-group">
+                        <label for="userName">الاسم الكامل *</label>
+                        <input type="text" id="userName" class="form-control" placeholder="مثال: أحمد محمد" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userPhone">رقم الهاتف *</label>
+                        <input type="tel" id="userPhone" class="form-control" placeholder="مثال: 07901234567" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userGovernorate">المحافظة *</label>
+                        <select id="userGovernorate" class="form-control" required>
+                            <option value="">اختر المحافظة</option>
+                            ${ADVANCED_CONFIG.GOVERNORATES.map(gov => `<option value="${gov}">${gov}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userAddress">العنوان التفصيلي *</label>
+                        <textarea id="userAddress" class="form-control" rows="3" placeholder="مثال: حي الجامعة، شارع الكندي، بناية رقم 15" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userGender">الجنس</label>
+                        <select id="userGender" class="form-control">
+                            <option value="">اختياري</option>
+                            <option value="female">أنثى</option>
+                            <option value="male">ذكر</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>الاهتمامات (اختر ما يناسبك)</label>
+                        <div class="interests-grid">
+                            ${ADVANCED_CONFIG.INTERESTS.map(interest => `
+                                <label class="interest-item">
+                                    <input type="checkbox" value="${interest}">
+                                    <span>${interest}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="notification-permission">
+                        <h4>🔔 هل تريد تلقي إشعارات العروض الخاصة؟</h4>
+                        <p>ستصلك إشعارات بأحدث المنتجات والخصومات</p>
+                        <div class="notification-buttons">
+                            <button type="button" onclick="userManager.enableNotifications()" class="btn-notification-yes">
+                                نعم، أريد الإشعارات
+                            </button>
+                            <button type="button" onclick="userManager.skipNotifications()" class="btn-notification-no">
+                                ليس الآن
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        💾 حفظ البيانات والمتابعة
+                    </button>
+                </form>
+            </div>
+        `;
+        
+        // إضافة الأحداث
+        const form = modal.querySelector('#advanced-registration-form');
+        form.addEventListener('submit', (e) => this.handleRegistrationSubmit(e));
+        
+        return modal;
+    }
+    
+    async handleRegistrationSubmit(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+        const interests = Array.from(event.target.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        
+        const userData = {
+            name: formData.get('userName'),
+            phone: formData.get('userPhone'),
+            governorate: formData.get('userGovernorate'),
+            address: formData.get('userAddress'),
+            gender: formData.get('userGender'),
+            interests: interests,
+            notificationsEnabled: this.notificationsRequested || false
+        };
+        
+        // التحقق من البيانات
+        if (!this.validateFormData(userData)) {
+            return;
+        }
+        
+        // حفظ البيانات
+        const result = await this.saveUserData(userData);
+        
+        if (result.success) {
+            this.closeRegistrationModal();
+            this.showNotification('🎉 مرحباً بك! تم تسجيلك بنجاح', 'success');
+            
+            // إرسال إشعار ترحيب
+            if (userData.notificationsEnabled) {
+                setTimeout(() => {
+                    notificationManager.sendWelcomeNotification(result.user);
+                }, 2000);
+            }
+        } else {
+            this.showNotification('❌ ' + result.error, 'error');
+        }
+    }
+    
+    validateFormData(userData) {
+    // التحقق من الاسم - محسن للأسماء العربية
+    const name = userData.name.trim();
+    
+    if (!name || name.length === 0) {
+        this.showNotification('❌ يرجى إدخال الاسم', 'error');
+        return false;
+    }
+    
+    if (name.length < 2) {
+        this.showNotification('❌ الاسم قصير جداً (حرفين على الأقل)', 'error');
+        return false;
+    }
+    
+    if (name.length > 40) {
+        this.showNotification('❌ الاسم طويل جداً (40 حرف كحد أقصى)', 'error');
+        return false;
+    }
+    
+    // التحقق من أن الاسم يحتوي على أحرف صالحة (عربية أو إنجليزية ومسافات)
+    const nameRegex = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+    if (!nameRegex.test(name)) {
+        this.showNotification('❌ الاسم يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', 'error');
+        return false;
+    }
+    
+    // التحقق من رقم الهاتف العراقي
+    const phone = (userData.phone || '').trim();
+    if (!phone || !/^07[0-9]{9}$/.test(phone)) {
+        this.showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
+        return false;
+    }
+    
+    // التحقق من المحافظة
+    if (!userData.governorate || userData.governorate.trim() === '') {
+        this.showNotification('❌ يرجى اختيار المحافظة', 'error');
+        return false;
+    }
+    
+    // التحقق من العنوان
+    const address = (userData.address || '').trim();
+    if (!address || address.length < 10) {
+        this.showNotification('❌ يرجى إدخال عنوان تفصيلي (10 أحرف على الأقل)', 'error');
+        return false;
+    }
+    
+    if (address.length > 200) {
+        this.showNotification('❌ العنوان طويل جداً (200 حرف كحد أقصى)', 'error');
+        return false;
+    }
+    
+    console.log('✅ تم التحقق من البيانات بنجاح:', {
+        name: name,
+        phone: phone,
+        governorate: userData.governorate,
+        address: address
+    });
+    
+    return true;
+}
+
+    
+    async enableNotifications() {
+        this.notificationsRequested = true;
+        const result = await notificationManager.requestPermission();
+        
+        if (result) {
+            this.showNotification('✅ تم تفعيل الإشعارات بنجاح', 'success');
+        } else {
+            this.showNotification('⚠️ لم يتم تفعيل الإشعارات', 'warning');
+        }
+    }
+    
+    skipNotifications() {
+        this.notificationsRequested = false;
+        this.showNotification('ℹ️ يمكنك تفعيل الإشعارات لاحقاً من الإعدادات', 'info');
+    }
+    
+    closeRegistrationModal() {
+        const modal = document.getElementById('advanced-user-registration');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    showNotification(message, type = 'info') {
+        // استخدام نظام التنبيهات من النظام الأساسي إذا كان متاحاً
+        if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+            return;
+        }
+        
+        // نظام تنبيهات مستقل
+        const notification = document.createElement('div');
+        const colors = {
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            info: '#3B82F6'
+        };
+        
+        notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px; background: ${colors[type]};
+            color: white; padding: 15px 20px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 10001;
+            font-weight: 600; max-width: 350px; font-family: 'Segoe UI', sans-serif;
+        `;
+        
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.remove(), 4000);
+    }
+    
+    async sendToBackend(action, data) {
+        try {
+            const payload = {
+                action: action,
+                ...data,
+                timestamp: new Date().toISOString(),
+                deviceId: this.deviceId
+            };
+            
+            const response = await fetch(ADVANCED_CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('خطأ في الاتصال بالخادم:', error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// ===== 3. نظام إدارة الإشعارات المتقدم =====
+class NotificationManager {
+    constructor() {
+        this.permission = Notification.permission;
+        this.subscribers = [];
+        this.initialize();
+    }
+    
+    async initialize() {
+        // محاولة تلقائية لطلب الإذن
+        if (this.permission === 'default') {
+            setTimeout(() => {
+                this.requestPermissionAutomatically();
+            }, 3000);
+        }
+        
+        console.log('🔔 نظام الإشعارات جاهز - الحالة:', this.permission);
+    }
+    
+    async requestPermissionAutomatically() {
+        try {
+            const permission = await Notification.requestPermission();
+            this.permission = permission;
+            
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.NOTIFICATIONS_STATUS, permission);
+            
+            if (permission === 'granted') {
+                console.log('✅ تم تفعيل الإشعارات تلقائياً');
+                
+                setTimeout(() => {
+                    this.showWelcomeNotification();
+                }, 1000);
+                
+                // إرسال حالة الإشعارات للخادم
+                this.updateNotificationStatus(true);
+            }
+            
+            return permission === 'granted';
+        } catch (error) {
+            console.error('خطأ في طلب إذن الإشعارات:', error);
+            return false;
+        }
+    }
+    
+    async requestPermission() {
+        if (this.permission === 'granted') {
+            return true;
+        }
+        
+        try {
+            const permission = await Notification.requestPermission();
+            this.permission = permission;
+            
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.NOTIFICATIONS_STATUS, permission);
+            
+            if (permission === 'granted') {
+                this.updateNotificationStatus(true);
+                return true;
+            } else {
+                this.updateNotificationStatus(false);
+                return false;
+            }
+        } catch (error) {
+            console.error('خطأ في طلب الإذن:', error);
+            return false;
+        }
+    }
+    
+    async subscribeUser(userData) {
+        if (this.permission !== 'granted') {
+            console.warn('الإشعارات غير مفعلة');
+            return false;
+        }
+        
+        try {
+            const subscriptionData = {
+                userId: userData.id,
+                name: userData.name,
+                phone: userData.phone,
+                governorate: userData.governorate,
+                interests: userData.interests,
+                subscriptionType: 'general',
+                notificationTiming: 'all_times',
+                subscriptionDate: new Date().toISOString(),
+                deviceId: userManager.deviceId
+            };
+            
+            const result = await this.sendToBackend('subscribe_user', { subscriptionData });
+            
+            if (result.success) {
+                console.log('✅ تم اشتراك المستخدم في الإشعارات');
+                return true;
+            } else {
+                console.error('فشل في اشتراك المستخدم:', result.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('خطأ في اشتراك المستخدم:', error);
+            return false;
+        }
+    }
+    
+    showWelcomeNotification() {
+        this.showNotification('🎉 مرحباً بك في شي ان العراق!', {
+            body: 'ستصلك أحدث العروض والمنتجات الجديدة',
+            icon: ADVANCED_CONFIG.NOTIFICATIONS.DEFAULT_ICON,
+            tag: 'welcome-auto',
+            requireInteraction: false
+        });
+    }
+    
+    async sendWelcomeNotification(userData) {
+        const firstName = userData.name.split(' ')[0];
+        
+        this.showNotification(`🎉 مرحباً ${firstName}!`, {
+            body: `أهلاً بك في شي ان العراق من ${userData.governorate}`,
+            icon: ADVANCED_CONFIG.NOTIFICATIONS.DEFAULT_ICON,
+            tag: 'welcome-user',
+            requireInteraction: false
+        });
+    }
+    
+    showNotification(title, options = {}) {
+        if (this.permission !== 'granted') {
+            console.warn('الإشعارات غير مفعلة');
+            return;
+        }
+        
+        const defaultOptions = {
+            body: '',
+            icon: ADVANCED_CONFIG.NOTIFICATIONS.DEFAULT_ICON,
+            badge: ADVANCED_CONFIG.NOTIFICATIONS.DEFAULT_ICON,
+            vibrate: [200, 100, 200],
+            requireInteraction: false,
+            silent: false,
+            tag: 'shiq-notification',
+            data: {
+                timestamp: Date.now(),
+                url: window.location.href
+            }
+        };
+        
+        const finalOptions = { ...defaultOptions, ...options };
+        
+        try {
+            const notification = new Notification(title, finalOptions);
+            
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+                
+                // تتبع النقر على الإشعار
+                analyticsManager.trackNotificationClick(title, finalOptions.tag);
+            };
+            
+            // إغلاق تلقائي بعد 10 ثواني
+            setTimeout(() => {
+                notification.close();
+            }, 10000);
+            
+            return notification;
+        } catch (error) {
+            console.error('خطأ في إظهار الإشعار:', error);
+        }
+    }
+    
+    async sendCustomNotification(notificationData) {
+        try {
+            const result = await this.sendToBackend('create_notification', { notificationData });
+            
+            if (result.success) {
+                console.log('✅ تم إرسال الإشعار المخصص');
+                return result;
+            } else {
+                console.error('فشل في إرسال الإشعار:', result.error);
+                return result;
+            }
+        } catch (error) {
+            console.error('خطأ في إرسال الإشعار المخصص:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    scheduleLocalNotification(title, body, delay) {
+        setTimeout(() => {
+            this.showNotification(title, {
+                body: body,
+                tag: 'scheduled-local'
+            });
+        }, delay);
+    }
+    
+    updateNotificationStatus(enabled) {
+        this.sendToBackend('update_notification_status', {
+            deviceId: userManager.deviceId,
+            userId: userManager.currentUser?.id,
+            enabled: enabled
+        });
+    }
+    
+    async sendToBackend(action, data) {
+        try {
+            const payload = {
+                action: action,
+                ...data,
+                timestamp: new Date().toISOString()
+            };
+            
+            const response = await fetch(ADVANCED_CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('خطأ في الاتصال بالخادم:', error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// ===== 4. نظام التحليلات والإحصائيات =====
+class AnalyticsManager {
+    constructor() {
+        this.events = [];
+        this.sessionId = this.generateSessionId();
+        this.initialize();
+    }
+    
+    initialize() {
+        this.trackPageView();
+        this.setupAutoTracking();
+        console.log('📊 نظام التحليلات جاهز');
+    }
+    
+    generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    trackPageView() {
+        this.trackEvent('page_view', {
+            url: window.location.href,
+            title: document.title,
+            referrer: document.referrer,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackUserRegistration(userData) {
+        this.trackEvent('user_registered', {
+            userId: userData.id,
+            governorate: userData.governorate,
+            interests: userData.interests,
+            notificationsEnabled: userData.notificationsEnabled,
+            registrationMethod: 'manual'
+        });
+    }
+    
+    trackCategorySelection(categoryName) {
+        this.trackEvent('category_selected', {
+            categoryName: categoryName,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackProductView(productName, categoryName) {
+        this.trackEvent('product_viewed', {
+            productName: productName,
+            categoryName: categoryName,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackAddToCart(productName, price, categoryName) {
+        this.trackEvent('add_to_cart', {
+            productName: productName,
+            price: price,
+            categoryName: categoryName,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackOrderCreated(orderData) {
+        this.trackEvent('order_created', {
+            orderId: orderData.orderId,
+            totalAmount: orderData.total,
+            itemsCount: orderData.products?.length || 0,
+            governorate: orderData.governorate,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackNotificationClick(title, tag) {
+        this.trackEvent('notification_clicked', {
+            title: title,
+            tag: tag,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackSearch(query, category) {
+        this.trackEvent('search_performed', {
+            query: query,
+            category: category,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    trackEvent(eventType, eventData) {
+        const event = {
+            id: 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            sessionId: this.sessionId,
+            eventType: eventType,
+            eventData: eventData,
+            userId: userManager.currentUser?.id || null,
+            deviceId: userManager.deviceId,
+            timestamp: new Date().toISOString(),
+            url: window.location.href
+        };
+        
+        this.events.push(event);
+        this.sendEventToBackend(event);
+        
+        // حفظ محلي للأحداث
+        this.saveEventsLocally();
+        
+        console.log('📈 تم تتبع الحدث:', eventType, eventData);
+    }
+    
+    async sendEventToBackend(event) {
+        try {
+            await fetch(ADVANCED_CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'track_event',
+                    eventData: event
+                })
+            });
+        } catch (error) {
+            console.warn('لم يتم إرسال الحدث للخادم:', error);
+        }
+    }
+    
+    saveEventsLocally() {
+        try {
+            // الاحتفاظ بآخر 100 حدث فقط
+            if (this.events.length > 100) {
+                this.events = this.events.slice(-100);
+            }
+            
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.ANALYTICS_DATA, JSON.stringify({
+                events: this.events,
+                sessionId: this.sessionId,
+                lastUpdated: new Date().toISOString()
+            }));
+        } catch (error) {
+            console.warn('لم يتم حفظ الأحداث محلياً:', error);
+        }
+    }
+    
+    setupAutoTracking() {
+        // تتبع الأخطاء
+        window.addEventListener('error', (e) => {
+            this.trackEvent('javascript_error', {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno
+            });
+        });
+        
+        // تتبع حالة الشبكة
+        window.addEventListener('online', () => {
+            this.trackEvent('network_status', { status: 'online' });
+        });
+        
+        window.addEventListener('offline', () => {
+            this.trackEvent('network_status', { status: 'offline' });
+        });
+        
+        // تتبع مغادرة الصفحة
+        window.addEventListener('beforeunload', () => {
+            this.trackEvent('page_unload', {
+                sessionDuration: Date.now() - this.sessionStart,
+                eventsCount: this.events.length
+            });
+        });
+        
+        this.sessionStart = Date.now();
+    }
+    
+    getAnalyticsReport() {
+        return {
+            sessionId: this.sessionId,
+            totalEvents: this.events.length,
+            eventTypes: this.getEventTypesCount(),
+            sessionDuration: Date.now() - this.sessionStart,
+            userId: userManager.currentUser?.id,
+            deviceId: userManager.deviceId
+        };
+    }
+    
+    getEventTypesCount() {
+        const counts = {};
+        this.events.forEach(event => {
+            counts[event.eventType] = (counts[event.eventType] || 0) + 1;
+        });
+        return counts;
+    }
+}
+
+// ===== 5. نظام إدارة الطلبات المتقدم =====
+class OrderManager {
+    constructor() {
+        this.orders = [];
+        this.initialize();
+    }
+    
+    initialize() {
+        console.log('📦 نظام إدارة الطلبات جاهز');
+    }
+    
+    async createOrder(cartItems, customerInfo = null) {
+        try {
+            const customer = customerInfo || userManager.currentUser;
+            
+            if (!customer) {
+                throw new Error('لا توجد معلومات العميل');
+            }
+            
+            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const deliveryFee = subtotal >= CORE_CONFIG?.ECOMMERCE?.FREE_DELIVERY_THRESHOLD ? 0 : (CORE_CONFIG?.ECOMMERCE?.DELIVERY_FEE || 5000);
+            const total = subtotal + deliveryFee;
+            
+            const orderData = {
+                orderId: this.generateOrderId(),
+                userId: customer.id,
+                userName: customer.name,
+                userPhone: customer.phone,
+                governorate: customer.governorate,
+                address: customer.address,
+                products: cartItems.map(item => ({
+                    code: item.code,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    size: item.size,
+                    imageUrl: item.imageUrl
+                })),
+                subtotal: subtotal,
+                deliveryFee: deliveryFee,
+                total: total,
+                status: 'pending',
+                paymentMethod: 'cash_on_delivery',
+                orderDate: new Date().toISOString(),
+                deviceId: userManager.deviceId,
+                source: 'web_app'
+            };
+            
+            // حفظ في الخادم
+            const result = await this.sendOrderToBackend(orderData);
+            
+            if (result.success) {
+                // تتبع الطلب
+                analyticsManager.trackOrderCreated(orderData);
+                
+                console.log('✅ تم إنشاء الطلب:', result.orderId);
+                return { success: true, orderId: result.orderId, orderData: orderData };
+            } else {
+                throw new Error(result.error || 'فشل في إنشاء الطلب');
+            }
+            
+        } catch (error) {
+            console.error('خطأ في إنشاء الطلب:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    generateOrderId() {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 6).toUpperCase();
+        return `SHIQ-${timestamp}-${random}`;
+    }
+    
+    createWhatsAppMessage(orderData) {
+        let message = `🛍️ طلب جديد من شي ان العراق\n\n`;
+        
+        // معلومات العميل
+        message += `👤 معلومات العميل:\n`;
+        message += `📛 الاسم: ${orderData.userName}\n`;
+        message += `📞 الهاتف: ${orderData.userPhone}\n`;
+        message += `🏠 المحافظة: ${orderData.governorate}\n`;
+        message += `📍 العنوان: ${orderData.address}\n`;
+        message += `🆔 معرف العميل: ${orderData.userId}\n\n`;
+        
+        // تفاصيل الطلب
+        message += `🛒 تفاصيل الطلب:\n`;
+        message += `📦 رقم الطلب: ${orderData.orderId}\n`;
+        message += `📊 عدد المنتجات: ${orderData.products.length} منتج\n`;
+        message += `📈 إجمالي القطع: ${orderData.products.reduce((sum, p) => sum + p.quantity, 0)} قطعة\n\n`;
+        
+        // المنتجات
+        message += `🏷️ المنتجات المطلوبة:\n`;
+        orderData.products.forEach((product, index) => {
+            const itemTotal = product.price * product.quantity;
+            message += `\n${index + 1}. ${product.name}\n`;
+            message += `   💰 السعر: ${product.price.toLocaleString()} د.ع\n`;
+            message += `   📦 الكمية: ${product.quantity}\n`;
+            if (product.size) message += `   📏 المقاس: ${product.size}\n`;
+            message += `   💵 المجموع: ${itemTotal.toLocaleString()} د.ع\n`;
+        });
+        
+        // ملخص الطلب
+        message += `\n📊 ملخص الطلب:\n`;
+        message += `💰 المجموع الفرعي: ${orderData.subtotal.toLocaleString()} د.ع\n`;
+        message += `🚚 رسوم التوصيل: ${orderData.deliveryFee === 0 ? 'مجاني 🎉' : orderData.deliveryFee.toLocaleString() + ' د.ع'}\n`;
+        message += `💵 المجموع الكلي: ${orderData.total.toLocaleString()} د.ع\n\n`;
+        
+        // معلومات إضافية
+        message += `📋 معلومات إضافية:\n`;
+        message += `📅 تاريخ الطلب: ${new Date(orderData.orderDate).toLocaleDateString('ar-IQ')}\n`;
+        message += `⏰ وقت الطلب: ${new Date(orderData.orderDate).toLocaleTimeString('ar-IQ')}\n`;
+        message += `💳 طريقة الدفع: دفع عند الاستلام\n\n`;
+        
+        message += `✅ يرجى تأكيد الطلب وتحديد موعد التسليم.\n`;
+        message += `🚚 التوصيل متاح لجميع مناطق ${orderData.governorate}\n`;
+        message += `📞 للاستفسار: ${CORE_CONFIG?.ECOMMERCE?.PHONE_NUMBER || '07862799748'}`;
+        
+        return message;
+    }
+    
+    sendOrderViaWhatsApp(orderData) {
+        const message = this.createWhatsAppMessage(orderData);
+        const whatsappNumber = CORE_CONFIG?.ECOMMERCE?.WHATSAPP_NUMBER || ADVANCED_CONFIG.WEB_APP_URL.match(/\d+/)?.[0] || '9647862799748';
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
+        
+        window.open(whatsappUrl, '_blank');
+        
+        // تتبع إرسال الطلب
+        analyticsManager.trackEvent('order_sent_whatsapp', {
+            orderId: orderData.orderId,
+            totalAmount: orderData.total,
+            governorate: orderData.governorate
+        });
+        
+        return whatsappUrl;
+    }
+    
+    async sendOrderToBackend(orderData) {
+        try {
+            const response = await fetch(ADVANCED_CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save_order',
+                    orderData: orderData
+                })
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('خطأ في إرسال الطلب للخادم:', error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// ===== 6. نظام إدارة التفضيلات =====
+class PreferencesManager {
+    constructor() {
+        this.preferences = this.loadPreferences();
+        this.initialize();
+    }
+    
+    initialize() {
+        console.log('⚙️ نظام التفضيلات جاهز');
+    }
+    
+    loadPreferences() {
+        try {
+            const saved = localStorage.getItem(ADVANCED_CONFIG.STORAGE_KEYS.PREFERENCES);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (error) {
+            console.warn('خطأ في تحميل التفضيلات:', error);
+        }
+        
+        return this.getDefaultPreferences();
+    }
+    
+    getDefaultPreferences() {
+        return {
+            language: 'ar',
+            theme: 'light',
+            notifications: {
+                enabled: true,
+                sound: true,
+                vibration: true,
+                daily: true,
+                weekly: true,
+                promotional: true
+            },
+            privacy: {
+                analytics: true,
+                locationTracking: false,
+                personalizedAds: true
+            },
+            ui: {
+                showWelcomeMessage: true,
+                autoSaveCart: true,
+                rememberSearches: true
+            }
+        };
+    }
+    
+    updatePreference(key, value) {
+        this.preferences[key] = value;
+        this.savePreferences();
+        this.applyPreference(key, value);
+    }
+    
+    savePreferences() {
+        try {
+            localStorage.setItem(ADVANCED_CONFIG.STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
+        } catch (error) {
+            console.warn('خطأ في حفظ التفضيلات:', error);
+        }
+    }
+    
+    applyPreference(key, value) {
+        switch (key) {
+            case 'theme':
+                this.applyTheme(value);
+                break;
+            case 'notifications':
+                this.applyNotificationSettings(value);
+                break;
+            default:
+                console.log('تم تحديث التفضيل:', key, value);
+        }
+    }
+    
+    applyTheme(theme) {
+        document.body.classList.remove('light-theme', 'dark-theme');
+        document.body.classList.add(theme + '-theme');
+    }
+    
+    applyNotificationSettings(settings) {
+        if (settings.enabled && notificationManager) {
+            notificationManager.requestPermission();
+        }
+    }
+    
+    getPreference(key) {
+        return this.preferences[key];
+    }
+    
+    resetToDefaults() {
+        this.preferences = this.getDefaultPreferences();
+        this.savePreferences();
+        this.applyAllPreferences();
+    }
+    
+    applyAllPreferences() {
+        Object.entries(this.preferences).forEach(([key, value]) => {
+            this.applyPreference(key, value);
+        });
+    }
+}
+
+// ===== 7. تهيئة النظام المتقدم =====
+let userManager, notificationManager, analyticsManager, orderManager, preferencesManager;
+
+// دالة التهيئة الرئيسية
+async function initializeAdvancedFeatures() {
+    try {
+        console.log('🚀 بدء تهيئة النظام المتقدم...');
+        
+        // تهيئة المدراء
+        userManager = new UserManager();
+        notificationManager = new NotificationManager();
+        analyticsManager = new AnalyticsManager();
+        orderManager = new OrderManager();
+        preferencesManager = new PreferencesManager();
+        
+        // انتظار التهيئة الكاملة
+        await userManager.initialize();
+        await notificationManager.initialize();
+        
+        // تطبيق التفضيلات
+        preferencesManager.applyAllPreferences();
+        
+        // إضافة للنافذة العامة
+        window.userManager = userManager;
+        window.notificationManager = notificationManager;
+        window.analyticsManager = analyticsManager;
+        window.orderManager = orderManager;
+        window.preferencesManager = preferencesManager;
+        
+        // إضافة دوال مساعدة
+        setupAdvancedHelpers();
+        
+        console.log('✅ تم تهيئة النظام المتقدم بنجاح!');
+        
+        return {
+            success: true,
+            userManager,
+            notificationManager,
+            analyticsManager,
+            orderManager,
+            preferencesManager
+        };
+        
+    } catch (error) {
+        console.error('❌ خطأ في تهيئة النظام المتقدم:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ===== 8. دوال مساعدة للاستخدام العام =====
+function setupAdvancedHelpers() {
+    // دوال إدارة المستخدمين
+    window.showUserRegistration = () => userManager.showRegistrationForm();
+    window.openUserProfile = () => showUserProfile();
+    window.closeUserProfile = () => closeUserProfile();
+    
+    // دوال الإشعارات
+    window.enableNotifications = () => notificationManager.requestPermission();
+    window.sendCustomNotification = (title, body) => notificationManager.showNotification(title, { body });
+    
+    // دوال الطلبات
+    window.createOrderFromCart = async (cartItems) => {
+        if (!userManager.currentUser) {
+            userManager.showRegistrationForm();
+            return;
+        }
+        
+        const result = await orderManager.createOrder(cartItems);
+        if (result.success) {
+            orderManager.sendOrderViaWhatsApp(result.orderData);
+        }
+        return result;
+    };
+    
+    // دوال التتبع
+    window.trackCustomEvent = (eventType, data) => analyticsManager.trackEvent(eventType, data);
+    
+    console.log('🔧 تم إعداد المساعدات المتقدمة');
+}
+
+function showUserProfile() {
+    if (!userManager.currentUser) {
+        userManager.showRegistrationForm();
+        return;
+    }
+    
+    const modal = createUserProfileModal();
+    document.body.appendChild(modal);
+    modal.classList.add('show');
+}
+
+function createUserProfileModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'advanced-user-profile';
+    
+    const user = userManager.currentUser;
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👤 الملف الشخصي</h2>
+                <button onclick="closeUserProfile()" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            
+            <div class="profile-sections">
+                <div class="profile-section">
+                    <h3>📋 المعلومات الأساسية</h3>
+                    <p><strong>الاسم:</strong> ${user.name}</p>
+                    <p><strong>الهاتف:</strong> ${user.phone}</p>
+                    <p><strong>المحافظة:</strong> ${user.governorate}</p>
+                    <p><strong>العنوان:</strong> ${user.address}</p>
+                    <p><strong>الجنس:</strong> ${user.gender || 'غير محدد'}</p>
+                </div>
+                
+                <div class="profile-section">
+                    <h3>🎯 الاهتمامات</h3>
+                    <div class="interests-display">
+                        ${user.interests && user.interests.length > 0 
+                            ? user.interests.map(interest => `<span class="interest-badge">${interest}</span>`).join('')
+                            : '<p>لا توجد اهتمامات محددة</p>'
+                        }
+                    </div>
+                </div>
+                
+                <div class="profile-section">
+                    <h3>🔔 الإشعارات</h3>
+                    <p>حالة الإشعارات: ${user.notificationsEnabled ? '✅ مفعلة' : '❌ غير مفعلة'}</p>
+                    <p>إذن المتصفح: ${Notification.permission === 'granted' ? '✅ مسموح' : '❌ غير مسموح'}</p>
+                </div>
+                
+                <div class="profile-section">
+                    <h3>📊 إحصائيات الحساب</h3>
+                    <p><strong>تاريخ التسجيل:</strong> ${new Date(user.registrationDate).toLocaleDateString('ar-IQ')}</p>
+                    <p><strong>آخر نشاط:</strong> ${new Date(user.lastActive).toLocaleDateString('ar-IQ')}</p>
+                    <p><strong>معرف العميل:</strong> ${user.id}</p>
+                    <p><strong>معرف الجهاز:</strong> ${userManager.deviceId}</p>
+                </div>
+            </div>
+            
+            <div class="profile-actions">
+                <button class="btn btn-primary" onclick="editUserProfile()">📝 تعديل البيانات</button>
+                <button class="btn btn-secondary" onclick="closeUserProfile()">إغلاق</button>
+            </div>
+        </div>
+    `;
+    
+    return modal;
+}
+
+function closeUserProfile() {
+    const modal = document.getElementById('advanced-user-profile');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function editUserProfile() {
+    closeUserProfile();
+    userManager.showRegistrationForm();
+    
+    // ملء النموذج بالبيانات الحالية
+    setTimeout(() => {
+        const user = userManager.currentUser;
+        if (user) {
+            document.getElementById('userName').value = user.name;
+            document.getElementById('userPhone').value = user.phone;
+            document.getElementById('userGovernorate').value = user.governorate;
+            document.getElementById('userAddress').value = user.address;
+            document.getElementById('userGender').value = user.gender || '';
+            
+            // الاهتمامات
+            if (user.interests) {
+                user.interests.forEach(interest => {
+                    const checkbox = document.querySelector(`input[value="${interest}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        }
+    }, 100);
+}
+
+// ===== 9. CSS للنظام المتقدم =====
+function addAdvancedStyles() {
+    if (document.querySelector('#advanced-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'advanced-styles';
+    style.textContent = `
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .modal-header h2 {
+            color: #8B5CF6;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .interest-item {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        
+        .interest-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .interest-item input {
+            margin-left: 8px;
+        }
+        
+        .notification-permission {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .notification-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .btn-notification-yes {
+            background: white;
+            color: #10B981;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-notification-no {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6B7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4B5563;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+        }
+        
+        .profile-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .profile-section {
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .profile-section h3 {
+            color: #8B5CF6;
+            margin-bottom: 10px;
+        }
+        
+        .interests-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .interest-badge {
+            background: #8B5CF6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .profile-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .interests-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .notification-buttons {
+                flex-direction: column;
+            }
+            
+            .profile-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    `;
+    
+    document.head.appendChild(style);
+}
+
+// ===== 10. تهيئة تلقائية عند تحميل الصفحة =====
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة التنسيقات
+    addAdvancedStyles();
+    
+    // تهيئة النظام المتقدم بعد تأخير قصير للسماح للنظام الأساسي بالتحميل
+    setTimeout(async () => {
+        const result = await initializeAdvancedFeatures();
+        
+        if (result.success) {
+            console.log('🎉 النظام المتقدم جاهز للاستخدام!');
+            
+            // تتبع بدء الجلسة
+            analyticsManager.trackEvent('session_started', {
+                userType: userManager.currentUser ? 'registered' : 'anonymous',
+                deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+            });
+            
+        } else {
+            console.error('❌ فشل في تهيئة النظام المتقدم:', result.error);
+        }
+    }, 1000);
+});
+
+// ===== تسجيل النهاية =====
+console.log('📦 تم تحميل النظام المتقدم بنجاح - Advanced Features Ready!');
+
+// Export للاستخدام كـ Module (اختياري)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        UserManager,
+        NotificationManager,
+        AnalyticsManager,
+        OrderManager,
+        PreferencesManager,
+        ADVANCED_CONFIG,
+        initializeAdvancedFeatures
+    };
+}
+
+// ===== دوال إضافية لإدارة التطبيق =====
+
+// متغيرات عامة للتوافق مع الكود القديم
+let deviceId = null;
+let currentUser = null;
+
+// دالة مبسطة للحصول على معرف الجهاز
+function getOrCreateDeviceId() {
+    if (userManager && userManager.deviceId) {
+        return userManager.deviceId;
+    }
+    
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+        id = 'dev_' + Math.random().toString(36).substring(2, 12);
+        localStorage.setItem('deviceId', id);
+    }
+    return id;
+}
+
+// دالة مبسطة لتحميل بيانات المستخدم
+function loadUserData() {
+    if (userManager && userManager.currentUser) {
+        return userManager.currentUser;
+    }
+    
+    const data = localStorage.getItem('currentUser');
+    return data ? JSON.parse(data) : null;
+}
+
+// دالة مبسطة لحفظ بيانات المستخدم
+function saveUserData(user) {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    if (userManager) {
+        userManager.currentUser = user;
+    }
+}
+
+// دالة تتبع الإجراءات
+function trackAction(action, data = {}) {
+    console.log(`📊 تتبع: ${action}`, data);
+    if (analyticsManager) {
+        analyticsManager.trackEvent(action, data);
+    }
+}
+
+// إشعارات محسنة
+function showNotificationSuccess(msg) {
+    if (ui && ui.showToast) {
+        ui.showToast(msg, 'success');
+    } else {
+        alert(msg);
+    }
+}
+
+function showNotificationInfo(msg) {
+    if (ui && ui.showToast) {
+        ui.showToast(msg, 'info');
+    } else {
+        alert(msg);
+    }
+}
+
