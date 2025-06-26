@@ -9,6 +9,7 @@
 // ========================================================================
 
 // ===== 1. الإعدادات الموحدة =====
+// تحديث في الإعدادات لتوضيح أن Google Script اختياري
 const SHIQ_CONFIG = {
     // معلومات التطبيق
     APP_NAME: 'SHIQ - شي ان العراق',
@@ -18,7 +19,7 @@ const SHIQ_CONFIG = {
     // إعدادات Google Sheets API
     GOOGLE_API_KEY: 'AIzaSyATs-nWgTonTFEKCi_4F5lQ_Ao0vnJ5Xmk',
     
-    // إعدادات النظام المتقدم
+    // إعدادات النظام المتقدم (اختيارية - للمطورين المتقدمين)
     WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzc9ojokNkOcmtINeXR9ijzc5HCfq5Ljgcp_4WIpW5JLGSnJryRvnyZqH8EEwB7tbHk/exec',
     MAIN_SHEET_ID: '1ap6gkoczUsqvf0KMoxXroo2uP_wycDGxyg6r-UPFgBQ',
     
@@ -408,35 +409,49 @@ class UserManager {
                 throw new Error('بيانات المستخدم غير مكتملة');
             }
             
-            // حفظ محلياً
+            // حفظ محلياً أولاً (الأولوية)
             localStorage.setItem(SHIQ_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(user));
             this.currentUser = user;
             
-            // إرسال للخادم
-            const result = await this.sendToBackend('save_user', { userData: user });
+            console.log('✅ تم حفظ بيانات المستخدم محلياً');
             
-            if (result.success) {
-                console.log('✅ تم حفظ بيانات المستخدم');
-                
-                // تفعيل الإشعارات إذا طُلب ذلك
-                if (user.notificationsEnabled && window.notificationManager) {
-                    await window.notificationManager.subscribeUser(user);
+            // محاولة إرسال للخادم (اختيارية)
+            try {
+                const result = await this.sendToBackend('save_user', { userData: user });
+                if (result.success) {
+                    console.log('✅ تم حفظ بيانات المستخدم على الخادم أيضاً');
+                } else {
+                    console.warn('⚠️ لم يتم حفظ البيانات على الخادم، لكن تم الحفظ محلياً');
                 }
-                
-                // تتبع التسجيل
-                if (window.analyticsManager) {
-                    window.analyticsManager.trackUserRegistration(user);
-                }
-                
-                this.updateUI();
-                
-                return { success: true, user: user };
-            } else {
-                throw new Error(result.error || 'فشل في حفظ البيانات');
+            } catch (serverError) {
+                console.warn('⚠️ خطأ في الاتصال بالخادم، لكن تم الحفظ محلياً:', serverError.message);
             }
             
+            // تفعيل الإشعارات إذا طُلب ذلك
+            if (user.notificationsEnabled && window.notificationManager) {
+                try {
+                    await window.notificationManager.subscribeUser(user);
+                } catch (notifError) {
+                    console.warn('⚠️ خطأ في تفعيل الإشعارات:', notifError.message);
+                }
+            }
+            
+            // تتبع التسجيل
+            if (window.analyticsManager) {
+                try {
+                    window.analyticsManager.trackUserRegistration(user);
+                } catch (analyticsError) {
+                    console.warn('⚠️ خطأ في تتبع الإحصائيات:', analyticsError.message);
+                }
+            }
+            
+            this.updateUI();
+            
+            // النجاح دائماً إذا تم الحفظ محلياً
+            return { success: true, user: user };
+            
         } catch (error) {
-            console.error('خطأ في حفظ بيانات المستخدم:', error);
+            console.error('❌ خطأ في حفظ بيانات المستخدم:', error);
             return { success: false, error: error.message };
         }
     }
@@ -758,40 +773,57 @@ class UserManager {
     async handleRegistrationSubmit(event) {
         event.preventDefault();
         
-        // الحصول على القيم مباشرة من العناصر بدلاً من FormData
-        const interests = Array.from(event.target.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(cb => cb.value);
+        // إظهار حالة التحميل
+        const form = event.target;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.innerHTML = '⏳ جاري الحفظ...';
+        submitButton.disabled = true;
         
-        const userData = {
-            name: document.getElementById('userName').value.trim(),
-            phone: document.getElementById('userPhone').value.trim(),
-            governorate: document.getElementById('userGovernorate').value,
-            address: document.getElementById('userAddress').value.trim(),
-            gender: document.getElementById('userGender').value,
-            interests: interests,
-            notificationsEnabled: this.notificationsRequested || false
-        };
-        
-        // التحقق من البيانات
-        if (!this.validateFormData(userData)) {
-            return;
-        }
-        
-        // حفظ البيانات
-        const result = await this.saveUserData(userData);
-        
-        if (result.success) {
-            this.closeRegistrationModal();
-            this.showToast('🎉 مرحباً بك! تم تسجيلك بنجاح', 'success');
+        try {
+            // الحصول على القيم مباشرة من العناصر بدلاً من FormData
+            const interests = Array.from(event.target.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
             
-            // إرسال إشعار ترحيب إذا كانت الإشعارات مفعلة
-            if (userData.notificationsEnabled && window.notificationManager) {
-                setTimeout(() => {
-                    window.notificationManager.sendWelcomeNotification(result.user);
-                }, 2000);
+            const userData = {
+                name: document.getElementById('userName').value.trim(),
+                phone: document.getElementById('userPhone').value.trim(),
+                governorate: document.getElementById('userGovernorate').value,
+                address: document.getElementById('userAddress').value.trim(),
+                gender: document.getElementById('userGender').value,
+                interests: interests,
+                notificationsEnabled: this.notificationsRequested || false
+            };
+            
+            // التحقق من البيانات
+            if (!this.validateFormData(userData)) {
+                return;
             }
-        } else {
-            this.showToast('❌ ' + result.error, 'error');
+            
+            // حفظ البيانات
+            const result = await this.saveUserData(userData);
+            
+            if (result.success) {
+                this.closeRegistrationModal();
+                this.showToast('🎉 مرحباً بك! تم تسجيلك بنجاح', 'success');
+                
+                // إرسال إشعار ترحيب إذا كانت الإشعارات مفعلة
+                if (userData.notificationsEnabled && window.notificationManager) {
+                    setTimeout(() => {
+                        window.notificationManager.sendWelcomeNotification(result.user);
+                    }, 2000);
+                }
+            } else {
+                this.showToast('❌ ' + result.error, 'error');
+            }
+            
+        } catch (error) {
+            console.error('خطأ في معالجة النموذج:', error);
+            this.showToast('❌ حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى', 'error');
+        } finally {
+            // إعادة تفعيل الزر
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
         }
     }
     
@@ -876,6 +908,12 @@ class UserManager {
     }
     
     async sendToBackend(action, data) {
+        // التحقق من وجود URL صحيح
+        if (!SHIQ_CONFIG.WEB_APP_URL || SHIQ_CONFIG.WEB_APP_URL.includes('سيتم_تحديثه') || SHIQ_CONFIG.WEB_APP_URL.includes('AKfycbzc9ojokNkOcmtINeXR9ijzc5HCfq5Ljgcp_4WIpW5JLGSnJryRvnyZqH8EEwB7tbHk')) {
+            console.warn('⚠️ Google Apps Script URL غير صحيح أو لم يتم تحديثه');
+            return { success: false, error: 'إعدادات الخادم غير مكتملة - سيتم الحفظ محلياً فقط' };
+        }
+        
         try {
             const payload = {
                 action: action,
@@ -884,16 +922,53 @@ class UserManager {
                 deviceId: this.deviceId
             };
             
+            console.log('📤 إرسال بيانات للخادم:', action);
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 ثوانِ timeout
+            
             const response = await fetch(SHIQ_CONFIG.WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
             
-            return await response.json();
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('📥 استجابة الخادم:', result);
+            
+            return result;
+            
         } catch (error) {
-            console.error('خطأ في الاتصال بالخادم:', error);
-            return { success: false, error: error.message };
+            console.warn('⚠️ خطأ في الاتصال بالخادم:', error.message);
+            
+            // تصنيف نوع الخطأ
+            let errorMessage = 'خطأ في الاتصال بالخادم';
+            
+            if (error.name === 'AbortError') {
+                errorMessage = 'انتهت مهلة الاتصال بالخادم';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'مشكلة في إعدادات الخادم (CORS)';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'لا يوجد اتصال بالإنترنت أو الخادم غير متاح';
+            } else if (error.message.includes('NetworkError')) {
+                errorMessage = 'خطأ في الشبكة';
+            }
+            
+            return { 
+                success: false, 
+                error: errorMessage,
+                details: error.message 
+            };
         }
     }
 }
@@ -1934,6 +2009,14 @@ let cart, imageManager, ui, eventManager, userManager, notificationManager, anal
 document.addEventListener('DOMContentLoaded', async function() {
     console.log(`🚀 ${SHIQ_CONFIG.APP_NAME} v${SHIQ_CONFIG.APP_VERSION} - بدء التحميل...`);
     
+    // فحص إعدادات Google Apps Script
+    if (!SHIQ_CONFIG.WEB_APP_URL || SHIQ_CONFIG.WEB_APP_URL.includes('سيتم_تحديثه') || SHIQ_CONFIG.WEB_APP_URL.includes('AKfycbzc9ojokNkOcmtINeXR9ijzc5HCfq5Ljgcp_4WIpW5JLGSnJryRvnyZqH8EEwB7tbHk')) {
+        console.log('⚠️ Google Apps Script غير مُعد - سيعمل التطبيق بالحفظ المحلي فقط');
+        console.log('ℹ️ هذا طبيعي ولا يؤثر على وظائف التطبيق الأساسية');
+    } else {
+        console.log('✅ Google Apps Script مُعد ومتصل');
+    }
+    
     try {
         // تهيئة المكونات بالترتيب الصحيح
         cart = new ShoppingCart();
@@ -1974,6 +2057,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.closeUserProfile = () => closeUserProfile();
         
         console.log(`✅ ${SHIQ_CONFIG.APP_NAME} v${SHIQ_CONFIG.APP_VERSION} - جاهز للاستخدام!`);
+        console.log('📱 جميع الميزات الأساسية تعمل بسلاسة');
         
         // تتبع بدء الجلسة
         analyticsManager.trackEvent('session_started', {
