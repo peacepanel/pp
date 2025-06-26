@@ -1135,21 +1135,17 @@ class UserManager {
     }
     
     async initialize() {
-  this.deviceId = this.getOrCreateDeviceId();
-  this.currentUser = this.loadUserData();
+        this.deviceId = this.getOrCreateDeviceId();
+        this.currentUser = this.loadUserData();
+        
+        if (this.currentUser) {
+            this.updateLastActivity();
+            this.showWelcomeBack();
+        }
+        
+        console.log('👤 نظام إدارة المستخدمين جاهز');
+    }
 
-  if (this.currentUser) {
-    this.updateLastActivity();
-    this.showWelcomeBack();
-  }
-
-  // ✅ إخفاء زر تفعيل الإشعارات إن كانت مفعلة مسبقًا
-  if (Notification.permission === 'granted') {
-    document.getElementById('enableNotificationsBtn')?.style.display = 'none';
-  }
-
-  console.log('🟣 نظام إدارة المستخدمين جاهز');
-}
 
     
     getOrCreateDeviceId() {
@@ -1444,29 +1440,33 @@ class UserManager {
         }
     }
     
-    function validateUserForm(userData) {
-  if (!userData.name || userData.name.trim().length === 0 || userData.name.trim().length > 40) {
-    showToast("يرجى كتابة الاسم بشكل صحيح (حتى 40 حرفًا)");
-    return false;
-  }
-        
-        if (!userData.phone || !/^07[0-9]{9}$/.test(userData.phone)) {
-            this.showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
-            return false;
-        }
-        
-        if (!userData.governorate) {
-            this.showNotification('❌ يرجى اختيار المحافظة', 'error');
-            return false;
-        }
-        
-        if (!userData.address || userData.address.length < 10) {
-            this.showNotification('❌ يرجى إدخال عنوان تفصيلي', 'error');
-            return false;
-        }
-        
-        return true;
+    validateFormData(userData) {
+    const name = (userData.name || '').trim();
+
+    if (name.length === 0 || name.length > 40) {
+        this.showNotification('❌ يرجى إدخال اسم صحيح (حتى 40 حرفًا)', 'error');
+        return false;
     }
+
+    if (!userData.phone || !/^07[0-9]{9}$/.test(userData.phone)) {
+        this.showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
+        return false;
+    }
+
+    if (!userData.governorate) {
+        this.showNotification('❌ يرجى اختيار المحافظة', 'error');
+        return false;
+    }
+
+    if (!userData.address || userData.address.length < 10) {
+        this.showNotification('❌ يرجى إدخال عنوان تفصيلي', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+
     
     async enableNotifications() {
         this.notificationsRequested = true;
