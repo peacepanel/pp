@@ -41,7 +41,7 @@
         .header {
             background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #C084FC 100%);
             color: white;
-            padding: 10px 15px;
+            padding: 15px;
             text-align: center;
             box-shadow: 0 2px 15px rgba(139, 92, 246, 0.3);
             position: sticky;
@@ -57,8 +57,15 @@
             letter-spacing: 1px;
         }
 
-        .header .tagline {
+        .user-welcome {
             display: none;
+            margin-top: 8px;
+            font-size: 1rem;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: inline-block;
         }
 
         /* Install App Banner */
@@ -171,28 +178,28 @@
 
         /* Category Container */
         .category-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    padding: 20px;
-    max-width: 1400px;  /* زيادة العرض الأقصى */
-    margin: 0 auto;
-    min-height: 200px;  /* إضافة حد أدنى للارتفاع */
-}
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 200px;
+        }
 
         .category {
-    background: rgba(255,255,255,0.95);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
-    width: 100%;
-    position: relative;
-    height: 280px;        /* ارتفاع ثابت بدلاً من aspect-ratio */
-    display: flex;
-    flex-direction: column;
-}
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            width: 100%;
+            position: relative;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
 
         .category:hover {
             transform: translateY(-3px) scale(1.02);
@@ -407,6 +414,35 @@
             background: linear-gradient(135deg, #128C7E 0%, #25D366 100%);
         }
 
+        /* User Profile Button */
+        .user-profile-btn {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .user-profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .user-profile-btn.show {
+            display: flex;
+        }
+
         /* Overlay */
         #overlay {
             position: fixed;
@@ -520,166 +556,6 @@
         .emoji-icon {
             font-size: 1.2em;
             margin-left: 5px;
-        }
-
-        /* User Registration Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: modalSlideIn 0.3s ease;
-        }
-
-        @keyframes modalSlideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .modal-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-header h2 {
-            color: #8B5CF6;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-            font-size: 1rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #E5E7EB;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #8B5CF6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-
-        .form-control.error {
-            border-color: #EF4444;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn:hover {
-            background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: #6B7280;
-        }
-
-        .btn-secondary:hover {
-            background: #4B5563;
-        }
-
-        .notification-permission {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .notification-permission button {
-            background: white;
-            color: #10B981;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            margin: 0 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .notification-permission button:hover {
-            background: #F3F4F6;
-            transform: translateY(-1px);
-        }
-
-        .user-profile-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.9);
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            z-index: 1001;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .user-profile-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .user-profile-btn.show {
-            display: flex;
         }
 
         /* Responsive Design */
@@ -924,9 +800,9 @@
 <body>
     <!-- Install App Banner -->
     <div class="install-banner" id="installBanner">
-    <div>📱 ثبت التطبيق على هاتفك للوصول السريع</div>
-    <button onclick="installApp()" style="background: white; color: #10b981; padding: 5px 15px; border-radius: 15px; border: none; margin-right: 10px; cursor: pointer;">تثبيت</button>
-</div>
+        <div>📱 ثبت التطبيق على هاتفك للوصول السريع</div>
+        <button onclick="installApp()" style="background: white; color: #10b981; padding: 5px 15px; border-radius: 15px; border: none; margin-right: 10px; cursor: pointer;">تثبيت</button>
+    </div>
 
     <div class="header">
         <h1>🛍️ شي ان العراق <span style="font-size: 0.6em;">✨</span></h1>
@@ -936,9 +812,7 @@
     <div class="category-nav" id="category-nav"></div>
 
     <div class="category-container" id="categoryContainer"></div>
-
-
-
+    
     <div class="search-container">
         <input type="text" id="searchBox" placeholder="🔍 ابحث عن المنتج..." oninput="searchProduct()">
         <span class="search-icon">🔍</span>
@@ -970,45 +844,59 @@
         👤
     </button>
 
+    <!-- Scripts -->
+    <script src="app.js" defer></script>
+    
+    <script>
+        // دوال مساعدة للتوافق
+        function openUserProfile() {
+            if (window.userManager) {
+                if (!window.userManager.currentUser) {
+                    window.userManager.showRegistrationForm();
+                } else {
+                    window.showUserProfile();
+                }
+            }
+        }
 
+        function installApp() {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                window.deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    window.deferredPrompt = null;
+                });
+            }
+        }
 
+        // PWA Installation
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            window.deferredPrompt = e;
+            document.getElementById('installBanner').classList.add('show');
+        });
 
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('SHIQ app was installed.');
+            document.getElementById('installBanner').classList.remove('show');
+        });
 
-
-    <!-- User Registration Modal -->
-    <div class="modal" id="userRegistrationModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🙋‍♀️ مرحباً بك في شي ان العراق</h2>
-                <p>نحتاج بعض المعلومات لتحسين تجربة التسوق</p>
-            </div>
-
-            
-        </div>
-    </div>
-
-    <!-- User Profile Modal -->
-    <div class="modal" id="userProfileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>👤 الملف الشخصي</h2>
-                <button type="button" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;" onclick="closeUserProfile()">×</button>
-            </div>
-
-            <div id="userProfileContent">
-                <!-- سيتم ملؤه ديناميكياً -->
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-                <button class="btn" onclick="editUserProfile()">📝 تعديل البيانات</button>
-                <button class="btn btn-secondary" onclick="closeUserProfile()">إغلاق</button>
-            </div>
-        </div>
-    </div>
-
-  
-<!-- في نهاية الصفحة مباشرة قبل </body> -->
-<script src="app.js" defer></script>
-
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
