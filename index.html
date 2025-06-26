@@ -171,28 +171,28 @@
 
         /* Category Container */
         .category-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    padding: 20px;
-    max-width: 1400px;  /* زيادة العرض الأقصى */
-    margin: 0 auto;
-    min-height: 200px;  /* إضافة حد أدنى للارتفاع */
-}
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 200px;
+        }
 
         .category {
-    background: rgba(255,255,255,0.95);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
-    width: 100%;
-    position: relative;
-    height: 280px;        /* ارتفاع ثابت بدلاً من aspect-ratio */
-    display: flex;
-    flex-direction: column;
-}
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            width: 100%;
+            position: relative;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
 
         .category:hover {
             transform: translateY(-3px) scale(1.02);
@@ -522,7 +522,7 @@
             margin-left: 5px;
         }
 
-        /* User Registration Modal */
+        /* ===== تنسيقات نموذج التسجيل الموحد ===== */
         .modal {
             position: fixed;
             top: 0;
@@ -547,9 +547,10 @@
             padding: 30px;
             max-width: 500px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
             animation: modalSlideIn 0.3s ease;
+            position: relative;
         }
 
         @keyframes modalSlideIn {
@@ -588,6 +589,8 @@
             font-size: 1rem;
             transition: all 0.3s ease;
             font-family: inherit;
+            direction: rtl;
+            box-sizing: border-box;
         }
 
         .form-control:focus {
@@ -596,8 +599,60 @@
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
         }
 
-        .form-control.error {
+        .form-control:invalid {
             border-color: #EF4444;
+        }
+
+        .form-control:valid {
+            border-color: #10B981;
+        }
+
+        .notification-permission {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .notification-permission h4 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .notification-permission p {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .notification-permission button {
+            background: white;
+            color: #10B981;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .notification-permission button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+        }
+
+        .notification-permission button:last-child {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .notification-permission button:last-child:hover {
+            background: rgba(255,255,255,0.1);
         }
 
         .btn {
@@ -611,7 +666,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 20px;
         }
 
         .btn:hover {
@@ -626,32 +681,6 @@
 
         .btn-secondary:hover {
             background: #4B5563;
-        }
-
-        .notification-permission {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .notification-permission button {
-            background: white;
-            color: #10B981;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            margin: 0 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .notification-permission button:hover {
-            background: #F3F4F6;
-            transform: translateY(-1px);
         }
 
         .user-profile-btn {
@@ -826,6 +855,11 @@
                 font-size: 12px;
                 padding: 8px 15px;
             }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -924,9 +958,9 @@
 <body>
     <!-- Install App Banner -->
     <div class="install-banner" id="installBanner">
-    <div>📱 ثبت التطبيق على هاتفك للوصول السريع</div>
-    <button onclick="installApp()" style="background: white; color: #10b981; padding: 5px 15px; border-radius: 15px; border: none; margin-right: 10px; cursor: pointer;">تثبيت</button>
-</div>
+        <div>📱 ثبت التطبيق على هاتفك للوصول السريع</div>
+        <button onclick="installApp()" style="background: white; color: #10b981; padding: 5px 15px; border-radius: 15px; border: none; margin-right: 10px; cursor: pointer;">تثبيت</button>
+    </div>
 
     <div class="header">
         <h1>🛍️ شي ان العراق <span style="font-size: 0.6em;">✨</span></h1>
@@ -936,8 +970,6 @@
     <div class="category-nav" id="category-nav"></div>
 
     <div class="category-container" id="categoryContainer"></div>
-
-
 
     <div class="search-container">
         <input type="text" id="searchBox" placeholder="🔍 ابحث عن المنتج..." oninput="searchProduct()">
@@ -970,12 +1002,7 @@
         👤
     </button>
 
-
-
-
-
-
-    <!-- User Registration Modal -->
+    <!-- ===== نموذج التسجيل الموحد ===== -->
     <div class="modal" id="userRegistrationModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -986,17 +1013,27 @@
             <form id="userRegistrationForm">
                 <div class="form-group">
                     <label for="userName">الاسم الكامل *</label>
-                    <input type="text" id="userName" name="userName" class="form-control" placeholder="مثال: أحمد محمد علي" required>
+                    <input type="text" 
+                           id="userName" 
+                           name="userName" 
+                           class="form-control" 
+                           placeholder="مثال: حيدر محمد علي" 
+                           required>
                 </div>
 
                 <div class="form-group">
                     <label for="userPhone">رقم الهاتف *</label>
-                    <input type="tel" id="userPhone" name="userPhone" class="form-control" placeholder="مثال: 07901234567" required>
+                    <input type="tel" 
+                           id="userPhone" 
+                           name="userPhone" 
+                           class="form-control" 
+                           placeholder="مثال: 07901234567" 
+                           required>
                 </div>
 
                 <div class="form-group">
                     <label for="userGovernorate">المحافظة *</label>
-                    <select id="userGovernorate" class="form-control" required>
+                    <select id="userGovernorate" name="userGovernorate" class="form-control" required>
                         <option value="">اختر المحافظة</option>
                         <option value="بغداد">بغداد</option>
                         <option value="البصرة">البصرة</option>
@@ -1021,12 +1058,17 @@
 
                 <div class="form-group">
                     <label for="userAddress">العنوان التفصيلي *</label>
-                    <textarea id="userAddress" class="form-control" rows="3" placeholder="مثال: حي الجامعة، شارع الكندي، بناية رقم 15، الطابق الثاني" required></textarea>
+                    <textarea id="userAddress" 
+                             name="userAddress" 
+                             class="form-control" 
+                             rows="3" 
+                             placeholder="مثال: حي الجامعة، شارع الكندي، بناية رقم 15، الطابق الثاني" 
+                             required></textarea>
                 </div>
 
                 <div class="form-group">
                     <label for="userGender">الجنس</label>
-                    <select id="userGender" class="form-control">
+                    <select id="userGender" name="userGender" class="form-control">
                         <option value="">اختياري</option>
                         <option value="female">أنثى</option>
                         <option value="male">ذكر</option>
@@ -1034,39 +1076,39 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="userInterests">الاهتمامات (اختر ما يناسبك)</label>
+                    <label>الاهتمامات (اختر ما يناسبك)</label>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="اكسسوارات نسائية" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="اكسسوارات نسائية" style="margin-left: 8px;">
                             اكسسوارات نسائية
                         </label>
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="احذية وحقائب" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="احذية وحقائب" style="margin-left: 8px;">
                             أحذية وحقائب
                         </label>
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="ملابس نسائية" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="ملابس نسائية" style="margin-left: 8px;">
                             ملابس نسائية
                         </label>
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="ملابس اطفال" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="ملابس اطفال" style="margin-left: 8px;">
                             ملابس أطفال
                         </label>
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="منزلية" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="منزلية" style="margin-left: 8px;">
                             مستلزمات منزلية
                         </label>
                         <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" value="مستلزمات موبايل" style="margin-left: 8px;">
+                            <input type="checkbox" name="userInterests" value="مستلزمات موبايل" style="margin-left: 8px;">
                             إكسسوارات موبايل
                         </label>
                     </div>
                 </div>
 
                 <div class="notification-permission">
-                    <h4 style="margin-bottom: 10px;">🔔 هل تريد تلقي إشعارات العروض الخاصة؟</h4>
-                    <p style="margin-bottom: 15px; font-size: 0.9rem;">ستصلك إشعارات بأحدث المنتجات والخصومات</p>
-                    <button type="button" onclick="enableNotifications()" style="background: #10B981; color: white;">
+                    <h4>🔔 هل تريد تلقي إشعارات العروض الخاصة؟</h4>
+                    <p>ستصلك إشعارات بأحدث المنتجات والخصومات</p>
+                    <button type="button" onclick="enableNotifications()">
                         نعم، أريد الإشعارات
                     </button>
                     <button type="button" onclick="skipNotifications()">
@@ -1081,28 +1123,8 @@
         </div>
     </div>
 
-    <!-- User Profile Modal -->
-    <div class="modal" id="userProfileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>👤 الملف الشخصي</h2>
-                <button type="button" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;" onclick="closeUserProfile()">×</button>
-            </div>
-
-            <div id="userProfileContent">
-                <!-- سيتم ملؤه ديناميكياً -->
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-                <button class="btn" onclick="editUserProfile()">📝 تعديل البيانات</button>
-                <button class="btn btn-secondary" onclick="closeUserProfile()">إغلاق</button>
-            </div>
-        </div>
-    </div>
-
-  
-<!-- في نهاية الصفحة مباشرة قبل </body> -->
-<script src="app.js" defer></script>
-
+    <!-- تضمين JavaScript -->
+    <script src="app.js" defer></script>
+    
 </body>
 </html>
