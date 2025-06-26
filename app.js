@@ -672,21 +672,6 @@ class UIManager {
         return;
     }
     
-    // التحقق من تسجيل المستخدم باستخدام النظام المُبسط
-    if (!window.currentUser) {
-        this.showToast('📝 يرجى تسجيل بياناتك أولاً لإكمال الطلب', 'info');
-        setTimeout(() => {
-            if (window.showUserRegistration) {
-                window.showUserRegistration();
-            }
-        }, 500);
-        return;
-    }
-    
-    this.createCartWindow();
-}
-
-    
     // ===== إضافة فحص تسجيل المستخدم =====
     // التحقق من وجود بيانات المستخدم قبل فتح السلة
     if (userManager && !userManager.currentUser) {
@@ -1150,17 +1135,21 @@ class UserManager {
     }
     
     async initialize() {
-        this.deviceId = this.getOrCreateDeviceId();
-        this.currentUser = this.loadUserData();
-        
-        if (this.currentUser) {
-            this.updateLastActivity();
-            this.showWelcomeBack();
-        }
-        
-        console.log('👤 نظام إدارة المستخدمين جاهز');
-    }
+  this.deviceId = this.getOrCreateDeviceId();
+  this.currentUser = this.loadUserData();
 
+  if (this.currentUser) {
+    this.updateLastActivity();
+    this.showWelcomeBack();
+  }
+
+  // ✅ إخفاء زر تفعيل الإشعارات إن كانت مفعلة مسبقًا
+  if (Notification.permission === 'granted') {
+    document.getElementById('enableNotificationsBtn')?.style.display = 'none';
+  }
+
+  console.log('🟣 نظام إدارة المستخدمين جاهز');
+}
 
     
     getOrCreateDeviceId() {
@@ -1455,67 +1444,29 @@ class UserManager {
         }
     }
     
-    validateFormData(userData) {
-    // التحقق من الاسم - محسن للأسماء العربية
-    const name = userData.name.trim();
-    
-    if (!name || name.length === 0) {
-        this.showNotification('❌ يرجى إدخال الاسم', 'error');
-        return false;
+    function validateUserForm(userData) {
+  if (!userData.name || userData.name.trim().length === 0 || userData.name.trim().length > 40) {
+    showToast("يرجى كتابة الاسم بشكل صحيح (حتى 40 حرفًا)");
+    return false;
+  }
+        
+        if (!userData.phone || !/^07[0-9]{9}$/.test(userData.phone)) {
+            this.showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
+            return false;
+        }
+        
+        if (!userData.governorate) {
+            this.showNotification('❌ يرجى اختيار المحافظة', 'error');
+            return false;
+        }
+        
+        if (!userData.address || userData.address.length < 10) {
+            this.showNotification('❌ يرجى إدخال عنوان تفصيلي', 'error');
+            return false;
+        }
+        
+        return true;
     }
-    
-    if (name.length < 2) {
-        this.showNotification('❌ الاسم قصير جداً (حرفين على الأقل)', 'error');
-        return false;
-    }
-    
-    if (name.length > 40) {
-        this.showNotification('❌ الاسم طويل جداً (40 حرف كحد أقصى)', 'error');
-        return false;
-    }
-    
-    // التحقق من أن الاسم يحتوي على أحرف صالحة (عربية أو إنجليزية ومسافات)
-    const nameRegex = /^[\u0600-\u06FFa-zA-Z\s]+$/;
-    if (!nameRegex.test(name)) {
-        this.showNotification('❌ الاسم يجب أن يحتوي على أحرف عربية أو إنجليزية فقط', 'error');
-        return false;
-    }
-    
-    // التحقق من رقم الهاتف العراقي
-    const phone = (userData.phone || '').trim();
-    if (!phone || !/^07[0-9]{9}$/.test(phone)) {
-        this.showNotification('❌ رقم الهاتف غير صحيح. يجب أن يبدأ بـ 07 ويتكون من 11 رقم', 'error');
-        return false;
-    }
-    
-    // التحقق من المحافظة
-    if (!userData.governorate || userData.governorate.trim() === '') {
-        this.showNotification('❌ يرجى اختيار المحافظة', 'error');
-        return false;
-    }
-    
-    // التحقق من العنوان
-    const address = (userData.address || '').trim();
-    if (!address || address.length < 10) {
-        this.showNotification('❌ يرجى إدخال عنوان تفصيلي (10 أحرف على الأقل)', 'error');
-        return false;
-    }
-    
-    if (address.length > 200) {
-        this.showNotification('❌ العنوان طويل جداً (200 حرف كحد أقصى)', 'error');
-        return false;
-    }
-    
-    console.log('✅ تم التحقق من البيانات بنجاح:', {
-        name: name,
-        phone: phone,
-        governorate: userData.governorate,
-        address: address
-    });
-    
-    return true;
-}
-
     
     async enableNotifications() {
         this.notificationsRequested = true;
