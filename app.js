@@ -758,16 +758,16 @@ class UserManager {
     async handleRegistrationSubmit(event) {
         event.preventDefault();
         
-        const formData = new FormData(event.target);
+        // الحصول على القيم مباشرة من العناصر بدلاً من FormData
         const interests = Array.from(event.target.querySelectorAll('input[type="checkbox"]:checked'))
             .map(cb => cb.value);
         
         const userData = {
-            name: formData.get('userName') || document.getElementById('userName').value,
-            phone: formData.get('userPhone') || document.getElementById('userPhone').value,
-            governorate: formData.get('userGovernorate') || document.getElementById('userGovernorate').value,
-            address: formData.get('userAddress') || document.getElementById('userAddress').value,
-            gender: formData.get('userGender') || document.getElementById('userGender').value,
+            name: document.getElementById('userName').value.trim(),
+            phone: document.getElementById('userPhone').value.trim(),
+            governorate: document.getElementById('userGovernorate').value,
+            address: document.getElementById('userAddress').value.trim(),
+            gender: document.getElementById('userGender').value,
             interests: interests,
             notificationsEnabled: this.notificationsRequested || false
         };
@@ -2079,16 +2079,23 @@ function editUserProfile() {
     setTimeout(() => {
         const user = userManager.currentUser;
         if (user) {
-            document.getElementById('userName').value = user.name;
-            document.getElementById('userPhone').value = user.phone;
-            document.getElementById('userGovernorate').value = user.governorate;
-            document.getElementById('userAddress').value = user.address;
-            document.getElementById('userGender').value = user.gender || '';
+            // ملء الحقول مباشرة بالقيم
+            const userNameField = document.getElementById('userName');
+            const userPhoneField = document.getElementById('userPhone');
+            const userGovernorateField = document.getElementById('userGovernorate');
+            const userAddressField = document.getElementById('userAddress');
+            const userGenderField = document.getElementById('userGender');
+            
+            if (userNameField) userNameField.value = user.name;
+            if (userPhoneField) userPhoneField.value = user.phone;
+            if (userGovernorateField) userGovernorateField.value = user.governorate;
+            if (userAddressField) userAddressField.value = user.address;
+            if (userGenderField) userGenderField.value = user.gender || '';
             
             // الاهتمامات
-            if (user.interests) {
+            if (user.interests && Array.isArray(user.interests)) {
                 user.interests.forEach(interest => {
-                    const checkbox = document.querySelector(`input[value="${interest}"]`);
+                    const checkbox = document.querySelector(`input[type="checkbox"][value="${interest}"]`);
                     if (checkbox) checkbox.checked = true;
                 });
             }
