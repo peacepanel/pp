@@ -1442,7 +1442,7 @@ class UserManager {
     
     validateFormData(userData) {
     // التحقق من الاسم - محسن للأسماء العربية
-    const name = (userData.name || '').trim();
+    const name = userData.name.trim();
     
     if (!name || name.length === 0) {
         this.showNotification('❌ يرجى إدخال الاسم', 'error');
